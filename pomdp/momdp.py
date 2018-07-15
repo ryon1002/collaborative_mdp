@@ -11,7 +11,7 @@ class MOMDP(object):
         self.tx = np.zeros((self.a, self.z, self.x, self.x))
         self.ty = np.zeros((self.a, self.x, self.y, self.y))
         self.r = np.zeros((self.y, self.a, self.x))
-        self.o = np.zeros((self.y, self.a, self.x, self.z))
+        self.o = np.zeros((self.y, self.a, self.x, self.z)) # start point
 
     def pre_calc(self):
         #p(y | x, a, z) \propto p(z | a, x, y) * p(y | a, x)
@@ -98,6 +98,7 @@ class Tiger(MOMDP):
         self.o[:, 2, 1, :] = 0.5
         self.o[0, 2, 0, :] = [0.8, 0.2]
         self.o[1, 2, 0, :] = [0.2, 0.8]
+        print(self.o)
 
         self.pre_calc()
 
