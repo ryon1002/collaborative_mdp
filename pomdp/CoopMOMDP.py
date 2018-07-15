@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 
 import momdp
-
+import correct_world
 
 class CoopMOMDP(momdp.MOMDP):
     def __init__(self, ws, th_h, a_h, a_r):
@@ -22,27 +22,6 @@ class CoopMOMDP(momdp.MOMDP):
                         t[x] += pi[x, a_h] * self.tx[a_r, a_h, x]
                 self.r[th_h, a_r] = np.sum(t * human.r_filter, axis=1)
 
-class World(object):
-    def __init__(self, shape):
-        self.shape = shape
-        self.s = np.prod(self.shape)
-        self.a = len(self.shape)
-        self.t = np.zeros((self.a, self.s, self.s))
-        self._add_transition([0] * self.a)
-
-    def _add_transition(self, s):
-        s_s = np.ravel_multi_index(s, self.shape)
-        for a in range(self.a):
-            n_s = list(s)
-            n_s[a] += 1
-            try:
-                n_s_s = np.ravel_multi_index(n_s, self.shape)
-            except ValueError:
-                self.t[a, s_s, s_s] = 1
-                continue
-            self.t[a, s_s, n_s_s] = 1
-            self._add_transition(n_s)
-        return
 
 class HumanModel(object):
     def __init__(self, world, goal):
@@ -72,7 +51,7 @@ class HumanModel(object):
 
 class Chef(CoopMOMDP):
     def __init__(self):
-        world = World((2, 2, 2))
+        world = correct_world.CorrectWorld((2, 2, 2))
         humans = [HumanModel(world, (1, 1, 0)), HumanModel(world, (0, 1, 1))]
         super().__init__(world.s, len(humans), world.a, world.a)
         for a_r, a_h in itertools.product(range(world.a), repeat=2):
@@ -84,7 +63,7 @@ class Chef(CoopMOMDP):
 
 class Chef2(CoopMOMDP):
     def __init__(self):
-        world = World((3, 3, 3, 3))
+        world = correct_world.CorrectWorld((3, 3, 3, 3))
         humans = [HumanModel(world, (2, 1, 1, 0)), HumanModel(world, (1, 1, 0, 2))]
         super().__init__(world.s, len(humans), world.a, world.a)
         for a_r, a_h in itertools.product(range(world.a), repeat=2):

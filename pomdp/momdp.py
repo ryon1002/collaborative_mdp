@@ -35,8 +35,6 @@ class MOMDP(object):
         return [i for i in zip(idx, arr[idx])]
 
     def calc_a_vector(self, d=1, bs=None, with_a=True):
-        # print(self.r[:, 1, 0])
-        # exit()
         if d == 1:
             self.a_vector = {x: self.r[:, :, x].copy().T for x in range(self.x)}
             return
@@ -94,7 +92,7 @@ class Tiger(MOMDP):
 
         self.r[0, :2, 0] = [10, -100]
         self.r[1, :2, 0] = [-100, 10]
-        self.r[:,-1, :] = [-1, 0]
+        self.r[:, -1, :] = [-1, 0]
 
         self.o[:, :2, :, :] = 0.5
         self.o[:, 2, 1, :] = 0.5
