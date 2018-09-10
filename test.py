@@ -1,7 +1,6 @@
 import numpy as np
-# from tiger.pomdp_to import Tiger
-from tiger.pomdp_to2 import Tiger
-# from tiger.pomdp_to3 import Tiger
+from problem.tiger.pomdp_from import Tiger
+# from problem.mod_tiger.pomdp_to import ModTiger
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
@@ -11,6 +10,7 @@ if __name__ == '__main__':
     b3 = np.zeros_like(b1)
     b = np.concatenate(([b1], [b2], [b3]), axis=0).T
     t = Tiger()
+    # t = ModTiger()
     for d in [1, 2, 3, 6, 30]:
     # for d in [1, 2, 3, 6]:
     # for d in [1, 2]:

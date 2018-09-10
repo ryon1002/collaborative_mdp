@@ -1,10 +1,12 @@
 import numpy as np
-from model.pomdp_to import POMDP
+from model.pomdp_from import POMDP
 
 
 class Tiger(POMDP):
     def __init__(self):
         super().__init__(3, 3, 2)
+
+    def _set_tro(self):
         self.t[:, :, -1] = 1
         self.t[-1, :, :] = np.identity(3)
 
@@ -17,4 +19,3 @@ class Tiger(POMDP):
         self.o[-1, 1, :] = [0.2, 0.8]
         self.o[-1, -1, :] = 0.5
 
-        self.pre_calc()
