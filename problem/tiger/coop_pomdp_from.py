@@ -1,4 +1,4 @@
-from model.coop_pomdp_base import CoopPOMDP
+from model.coop_pomdp_from import CoopPOMDP
 
 class Tiger(CoopPOMDP):
     def __init__(self):
