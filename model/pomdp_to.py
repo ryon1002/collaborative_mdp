@@ -4,7 +4,6 @@ from .import pomdp_base
 class POMDP(pomdp_base.POMDP):
     def _pre_calc(self):
         self.update = np.zeros((self.a, self.z, self.s, self.s))
-
         for s in range(self.s):
             for a in range(self.a):
                 p_z_as = np.dot(self.t[a, s], self.o[a, :])

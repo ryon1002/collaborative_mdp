@@ -7,5 +7,3 @@ class POMDP(pomdp_base.POMDP):
         for s in range(self.s):
             for a in range(self.a):
                 self.update[a, :, s] = np.outer(self.o[a, s], self.t[a, s])
-
-
