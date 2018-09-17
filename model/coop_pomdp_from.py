@@ -19,12 +19,7 @@ class CoopPOMDP(object):
         self.sum_r = np.zeros((self.a_r, self.s, self.th))
         for th in range(self.th):
             for s in range(self.s):
-                # print(self.r[:, :, s, th])
                 self.sum_r[:, s, th] = np.sum(self.o[th, :, s] * self.r[:, :, s, th], axis=1)
-        # exit()
-        # print(self.sum_r[:, :, 0])
-        # print(self.sum_r.shape)
-        # exit()
 
         self.update = np.zeros((self.a_r, self.a_h, self.s, self.s, self.th))
         for th in range(self.th):
@@ -47,9 +42,6 @@ class CoopPOMDP(object):
     def calc_a_vector(self, d=1, bs=None, with_a=True):
         if d == 1:
             self.a_vector = {s: self.sum_r[:, s, :].copy() for s in range(self.s)}
-            # for s in range(self.s):
-            #     print(d, s, self.a_vector[s])
-            # exit()
             return
         self.calc_a_vector(d - 1, bs, False)
         a_vector = {}
@@ -78,7 +70,6 @@ class CoopPOMDP(object):
             self.a_vector = {s: util.prune(np.concatenate(list(vector.values()), axis=0), bs) for
                              s, vector in
                              a_vector.items()} if bs is not None else a_vector
-        # print(d)
         for s in range(self.s):
             print(d, s, self.a_vector[s])
 
