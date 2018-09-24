@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 # from problem.mod_tiger.pomdp_to import ModTiger
 from problem.tiger.coop_pomdp_from import Tiger
 # from problem.correct.coop_pomdp_from import Correct
-from problem.correct.coop_irl_from import Correct
+# from problem.correct.coop_irl_from import Correct
+from problem.correct.double_coop_irl_from import Correct
 
 def make_belief(size = 2):
     b1 = np.arange(0, 1.01, 0.04)
@@ -27,7 +28,8 @@ def test_tiger():
 
 def test_chef():
     b = make_belief(2)
-    env = Correct(4, 2, [[2, 1, 1, 0], [1, 1, 0, 2]])
+    # env = Correct(4, 2, [[2, 1, 1, 0], [1, 1, 0, 2]])
+    env = Correct(4, 2, [[1, 0, 2, 1], [0, 1, 1, 2]])
     for d in [2]:
         env.calc_a_vector(d, b, with_a=True)
         for a_r in range(env.a_r):
@@ -39,13 +41,5 @@ def test_chef():
     plt.show()
 
 if __name__ == '__main__':
-
-    # b = np.array([[2, 3], [10, 10]])
-    # print(b)
-    # print(np.max(b, axis=0))
-    # print(np.max(b, axis=1))
-    # exit()
-
-    # test_tiger()
     test_chef()
 

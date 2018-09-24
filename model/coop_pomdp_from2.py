@@ -3,7 +3,7 @@ import itertools
 from . import util
 
 
-class CoopIRL(object):
+class CoopPOMDP(object):
     def __init__(self, s, a_r, a_h, th):
         self.s = s
         self.a_r = a_r
@@ -11,7 +11,7 @@ class CoopIRL(object):
         self.th = th
         self.t = np.zeros((self.a_r, self.a_h, self.s, self.s))
         self.r = np.zeros((self.a_r, self.a_h, self.s, self.th))
-        # self.o = np.zeros((self.th, self.a_r, self.s, self.a_h))
+        self.o = np.zeros((self.th, self.a_r, self.s, self.a_h))
         self._set_tro()
         self._pre_calc()
 
@@ -19,8 +19,14 @@ class CoopIRL(object):
         self.sum_r = np.zeros((self.a_r, self.s, self.th))
         for th in range(self.th):
             for s in range(self.s):
-                self.sum_r[:, s, th] = np.max(self.r[:, :, s, th], axis=1)
+                self.sum_r[:, s, th] = np.sum(self.o[th, :, s] * self.r[:, :, s, th], axis=1)
 
+        self.update = np.zeros((self.a_r, self.a_h, self.s, self.s, self.th))
+        for th in range(self.th):
+            for s in range(self.s):
+                for a_r in range(self.a_r):
+                    t = np.sum(self.t[a_r, :, s] * self.o[th, a_r, s][:, np.newaxis], axis=0)
+                    self.update[a_r, :, s, :, th] = np.outer(self.o[th, a_r, s], t)
         self.ns = {
             s: {a_r: {a_h: self._ex_all_nx(s, a_r, a_h) for a_h in range(self.a_h)} for a_r in
                 range(self.a_r)} for s in range(self.s)}
@@ -35,27 +41,37 @@ class CoopIRL(object):
 
     def calc_a_vector(self, d=1, bs=None, with_a=True):
         if d == 1:
-            self.a_vector = {s: util.prune(self.sum_r[:, s, :].copy(), bs)
-                             for s in range(self.s)}
+            self.a_vector = {s: self.sum_r[:, s, :].copy() for s in range(self.s)}
             return
         self.calc_a_vector(d - 1, bs, False)
         a_vector = {}
-
         for s in range(self.s):
             a_vector[s] = {}
             for a_r in range(self.a_r):
-                a_vector_a = np.empty((0, self.th))
+                p_a_vector = []
+                p_a_vector_nums = []
                 for a_h in range(self.a_h):
+                    tmp_p_a_vector = np.empty((0, self.th))
                     for ns, _p in self.ns[s][a_r][a_h]:
-                        a_vector_a = np.concatenate([a_vector_a, self.r[a_r, a_h, s] +
-                                                     self.a_vector[ns]])
-                a_vector[s][a_r] = util.unique_for_raw(np.max(a_vector_a, axis=0, keepdims=True))
+                        tmp_p_a_vector = np.concatenate(
+                            [tmp_p_a_vector, self.a_vector[ns] * self.update[ a_r, a_h, s, ns]])
+                    p_a_vector.append(util.unique_for_raw(tmp_p_a_vector))
+                    p_a_vector_nums.append(len(p_a_vector[-1]))
+                a_vector_a = np.zeros((np.prod(p_a_vector_nums), self.th))
+                for m, i in enumerate(itertools.product(*[range(l) for l in p_a_vector_nums])):
+                    a_vector_a[m] = np.sum([p_a_vector[n][j] for n, j in enumerate(i)], axis=0)
+                a_vector_a = util.unique_for_raw(a_vector_a)
+                a_vector[s][a_r] = self.sum_r[a_r, s, :] + a_vector_a
         if with_a:
             self.a_vector_a = {s: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()}
-                               for s, vectorA in a_vector.items()} if bs is not None else a_vector
+                               for s, vectorA in
+                               a_vector.items()} if bs is not None else a_vector
         else:
             self.a_vector = {s: util.prune(np.concatenate(list(vector.values()), axis=0), bs) for
-                             s, vector in a_vector.items()} if bs is not None else a_vector
+                             s, vector in
+                             a_vector.items()} if bs is not None else a_vector
+        for s in range(self.s):
+            print(d, s, self.a_vector[s])
 
     def value_a(self, s, a_r, b):
         return np.max(np.dot(self.a_vector_a[s][a_r], b))
