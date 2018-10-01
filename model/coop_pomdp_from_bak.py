@@ -70,6 +70,8 @@ class CoopPOMDP(object):
             self.a_vector = {s: util.prune(np.concatenate(list(vector.values()), axis=0), bs) for
                              s, vector in
                              a_vector.items()} if bs is not None else a_vector
+        for s in range(self.s):
+            print(d, s, self.a_vector[s])
 
     def value_a(self, s, a_r, b):
         return np.max(np.dot(self.a_vector_a[s][a_r], b))

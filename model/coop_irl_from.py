@@ -15,11 +15,27 @@ class CoopIRL(object):
         self._set_tro()
         self._pre_calc()
 
+    def func(self, arr):
+        ret = np.zeros_like(arr)
+        ret[np.argmax(arr)] = 1
+        return ret
+
     def _pre_calc(self):
         self.sum_r = np.zeros((self.a_r, self.s, self.th))
         for th in range(self.th):
             for s in range(self.s):
                 self.sum_r[:, s, th] = np.max(self.r[:, :, s, th], axis=1)
+        # print(self.sum_r)
+        # exit()
+
+        # self.update = np.zeros((self.a_r, self.a_h, self.s, self.s, self.th))
+        # for th in range(self.th):
+        #     for s in range(self.s):
+        #         for a_r in range(self.a_r):
+        #             t = np.sum(self.t[a_r, :, s] * self.o[th, a_r, s][:, np.newaxis], axis=0)
+        #             print(t.shape)
+        #             # self.update[a_r, :, s, :, th] = np.outer(self.o[th, a_r, s], t)
+        # exit()
 
         self.ns = {
             s: {a_r: {a_h: self._ex_all_nx(s, a_r, a_h) for a_h in range(self.a_h)} for a_r in
@@ -44,12 +60,60 @@ class CoopIRL(object):
         for s in range(self.s):
             a_vector[s] = {}
             for a_r in range(self.a_r):
-                a_vector_a = np.empty((0, self.th))
+                q_vector = np.empty((self.a_h, self.th))
+                q_vector_as = {}
                 for a_h in range(self.a_h):
+                    q_vector_a = np.empty((0, self.th))
                     for ns, _p in self.ns[s][a_r][a_h]:
-                        a_vector_a = np.concatenate([a_vector_a, self.r[a_r, a_h, s] +
+                        q_vector_a = np.concatenate([q_vector_a, self.r[a_r, a_h, s] +
                                                      self.a_vector[ns]])
-                a_vector[s][a_r] = util.unique_for_raw(np.max(a_vector_a, axis=0, keepdims=True))
+                    # q_vector[a_h] = np.max(q_vector_a, axis=0)
+                    if a_r == 1:
+                        print(a_h)
+                        print(q_vector_a)
+                    q_vector[a_h] = np.mean(q_vector_a, axis=0)
+                    q_vector_as[a_h] = q_vector_a
+
+                if a_r == 1:
+                    print("test")
+                    print(q_vector)
+                    print(q_vector_as)
+                    exit()
+
+                pi = np.apply_along_axis(self.func, 0, q_vector)
+                # if a_r == 1:
+                #     print(q_vector_as)
+                #     print(q_vector)
+                #     print(pi)
+                #     exit()
+                update = np.empty((self.a_h, self.s, self.th))
+                for th in range(self.th):
+                    t = np.sum(self.t[a_r, :, s] * pi[:, th][:, np.newaxis], axis=0)
+                    update[:, :, th] = np.outer(pi[:, th], t)
+
+                p_a_vector = []
+                p_a_vector_nums = []
+                for a_h in range(self.a_h):
+                    tmp_p_a_vector = np.empty((0, self.th))
+                    for ns, _p in self.ns[s][a_r][a_h]:
+                        # print(s, a_r, a_h, ns, update[a_h, ns])
+                        if a_r == 1:
+                            print(ns, _p, update[a_h, ns])
+                        tmp_p_a_vector = np.concatenate(
+                            [tmp_p_a_vector, self.a_vector[ns] * update[a_h, ns]])
+                    p_a_vector.append(util.unique_for_raw(tmp_p_a_vector))
+                    p_a_vector_nums.append(len(p_a_vector[-1]))
+                # print(p_a_vector)
+                # print(p_a_vector_nums)
+                # exit()
+                a_vector_a = np.zeros((np.prod(p_a_vector_nums), self.th))
+                for m, i in enumerate(itertools.product(*[range(l) for l in p_a_vector_nums])):
+                    a_vector_a[m] = np.sum([p_a_vector[n][j] for n, j in enumerate(i)], axis=0)
+                a_vector_a = util.unique_for_raw(a_vector_a)
+                a_vector[s][a_r] = self.sum_r[a_r, s, :] + a_vector_a
+                # a_vector[s][a_r] = np.apply_along_axis(np.max, 0, q_vector)
+
+                # exit()
         if with_a:
             self.a_vector_a = {s: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()}
                                for s, vectorA in a_vector.items()} if bs is not None else a_vector
