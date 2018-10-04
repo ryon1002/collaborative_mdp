@@ -20,22 +20,20 @@ class CoopIRL(object):
         ret[np.argmax(arr)] = 1
         return ret
 
+    def _max_q_prob(self, arr):
+        ret = (arr == np.max(arr)).astype(np.int)
+        return ret / np.sum(ret)
+
+    def _avg_prob(self, arr):
+        if np.sum(arr) == 0:
+            return arr
+        return arr / np.sum(arr)
+
     def _pre_calc(self):
         self.sum_r = np.zeros((self.a_r, self.s, self.th))
         for th in range(self.th):
             for s in range(self.s):
                 self.sum_r[:, s, th] = np.max(self.r[:, :, s, th], axis=1)
-        # print(self.sum_r)
-        # exit()
-
-        # self.update = np.zeros((self.a_r, self.a_h, self.s, self.s, self.th))
-        # for th in range(self.th):
-        #     for s in range(self.s):
-        #         for a_r in range(self.a_r):
-        #             t = np.sum(self.t[a_r, :, s] * self.o[th, a_r, s][:, np.newaxis], axis=0)
-        #             print(t.shape)
-        #             # self.update[a_r, :, s, :, th] = np.outer(self.o[th, a_r, s], t)
-        # exit()
 
         self.ns = {
             s: {a_r: {a_h: self._ex_all_nx(s, a_r, a_h) for a_h in range(self.a_h)} for a_r in
@@ -67,25 +65,17 @@ class CoopIRL(object):
                     for ns, _p in self.ns[s][a_r][a_h]:
                         q_vector_a = np.concatenate([q_vector_a, self.r[a_r, a_h, s] +
                                                      self.a_vector[ns]])
-                    # q_vector[a_h] = np.max(q_vector_a, axis=0)
-                    if a_r == 1:
-                        print(a_h)
-                        print(q_vector_a)
-                    q_vector[a_h] = np.mean(q_vector_a, axis=0)
+                    # q_vector[a_h] = np.mean(q_vector_a, axis=0)
+                    q_vector[a_h] = np.max(q_vector_a, axis=0)
                     q_vector_as[a_h] = q_vector_a
 
-                if a_r == 1:
-                    print("test")
-                    print(q_vector)
-                    print(q_vector_as)
-                    exit()
+                pi = np.apply_along_axis(self._max_q_prob, 0, q_vector)
+                pi = np.apply_along_axis(self._avg_prob, 1, pi)
+                for a_h in range(self.a_h):
+                    q_vector[a_h] = np.max(pi[a_h] * q_vector_as[a_h], axis=0)
 
                 pi = np.apply_along_axis(self.func, 0, q_vector)
-                # if a_r == 1:
-                #     print(q_vector_as)
-                #     print(q_vector)
-                #     print(pi)
-                #     exit()
+
                 update = np.empty((self.a_h, self.s, self.th))
                 for th in range(self.th):
                     t = np.sum(self.t[a_r, :, s] * pi[:, th][:, np.newaxis], axis=0)
@@ -97,8 +87,8 @@ class CoopIRL(object):
                     tmp_p_a_vector = np.empty((0, self.th))
                     for ns, _p in self.ns[s][a_r][a_h]:
                         # print(s, a_r, a_h, ns, update[a_h, ns])
-                        if a_r == 1:
-                            print(ns, _p, update[a_h, ns])
+                        # if a_r == 1:
+                        #     print(ns, _p, update[a_h, ns])
                         tmp_p_a_vector = np.concatenate(
                             [tmp_p_a_vector, self.a_vector[ns] * update[a_h, ns]])
                     p_a_vector.append(util.unique_for_raw(tmp_p_a_vector))
