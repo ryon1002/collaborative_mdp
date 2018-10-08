@@ -7,7 +7,8 @@ from problem.tiger.coop_pomdp_from import Tiger
 # from problem.correct.coop_pomdp_from import Correct
 # from problem.correct.coop_irl_from import Correct
 # from problem.correct.double_coop_irl_from import Correct
-from problem.correct.double_coop_irl_from2 import Correct
+# from problem.correct.double_coop_irl_from2 import Correct
+from problem.correct.double_coop_irl_from2_2 import Correct
 
 
 def make_belief(size=2):
@@ -37,7 +38,7 @@ def test_chef():
     b = make_belief(2)
     # print(0b0101_11000)
     # print(0b0010_10000)
-    print(0b0010_10000)
+    # print(0b0010_10000)
     # exit()
     # env = Correct(4, 2, [[2, 1, 1, 0], [1, 1, 0, 2]])
     # env = Correct(4, 2, [[1, 0, 2, 1], [0, 1, 1, 2]])
@@ -65,14 +66,22 @@ def test_chef():
     #                 [1, 0, 0, 1, 1, 0, 0, 0, 1]]],
     #               [[-3, -1, -1, -1, -1, -1, -1, -1, -1],
     #                [-1, -3, -1, -1, -1, -1, -1, -1, -1]])
+
+    env = Correct(4, 3, 1,
+                  [[[1, 0, 0, 1, 1, 1, 0],
+                    [1, 0, 1, 0, 1, 0, 1]],
+                   [[0, 1, 1, 0, 1, 0, 1],
+                    [0, 1, 0, 1, 1, 1, 0]]],
+                  [[-1, -1, -1, -3, -1, -1, -1],
+                   [-1, -1, -3, -1, -1, -1, -1]])
     # pickle.dump(env, open("env.pkl", "wb"))
-    env = pickle.load(open("env.pkl", "rb"))
+    # env = pickle.load(open("env.pkl", "rb"))
 
     for d in [5]:
-        # env.calc_a_vector(d, b, with_a=True)
-        env.calc_a_vector(1, d, b, with_a=True)
+        env.calc_a_vector(d, b, with_a=True)
+        # env.calc_a_vector(0, d, b, with_a=True)
     for a_r in range(env.a_r):
-        v = np.array([env.value_a(0, a_r, b[i]) for i in range(len(b))])
+        v = np.array([env.value_a(0, 0, a_r, b[i]) for i in range(len(b))])
         print(v)
         plt.plot(b[:, 0], v, label=a_r)
     # break

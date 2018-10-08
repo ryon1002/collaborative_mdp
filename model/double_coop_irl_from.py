@@ -69,25 +69,31 @@ class CoopIRL(object):
                     for ns, _p in self.ns[s][a_r][a_h]:
                         q_vector_a = np.concatenate([q_vector_a, self.r[a_r, a_h, s, th_r] +
                                                      self.a_vector[ns]])
-                    # q_vector[a_h] = np.mean(q_vector_a, axis=0)
+
                     q_vector[a_h] = np.max(q_vector_a, axis=0)
                     q_vector_as[a_h] = q_vector_a
-
-                # if s == 80 and a_r == 1 and d == 2:
+                # print(q_vector_as)
+                # print(q_vector)
                 pi = np.apply_along_axis(self._max_q_prob, 0, q_vector)
+                # print(q_vector)
                 pi = np.apply_along_axis(self._avg_prob, 1, pi)
                 for a_h in range(self.a_h):
                     if np.sum(pi[a_h]) == 0:
                         q_vector[a_h] = -100
                     else:
                         q_vector[a_h] = np.max(pi[a_h] * q_vector_as[a_h], axis=0)
-                if s == 0 and a_r == 0 and d == 2:
-                    print(q_vector)
-                    # exit()
+                        if not np.array_equal(q_vector[a_h][0], pi[a_h] * q_vector[a_h]):
+                            print()
+                            print(pi[a_h])
+                            print(q_vector[a_h])
+                            # print(q_vector_as[a_h])
+                            print(np.max(q_vector_as[a_h], axis=0))
+                            # exit()
+
+
+                        # exit()
+                        # print()
                 pi = np.apply_along_axis(self._max_q_prob, 0, q_vector)
-                if s == 0 and a_r == 0 and d == 2:
-                    print(pi)
-                    # exit()
                 # pi = np.apply_along_axis(self.func, 0, q_vector)
 
                 update = np.empty((self.a_h, self.s, self.th_h))
@@ -112,7 +118,6 @@ class CoopIRL(object):
                 a_vector_a = util.unique_for_raw(a_vector_a)
                 # a_vector[s][a_r] = self.sum_r[a_r, s, th_r, :] + a_vector_a
                 a_vector[s][a_r] = a_vector_a
-        print(d, a_vector[80])
         if with_a:
             self.a_vector_a = {s: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()}
                                for s, vectorA in a_vector.items()} if bs is not None else a_vector
