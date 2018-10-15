@@ -52,7 +52,7 @@ class Correct(CoopIRL):
                         if (len(l_item) == 1 and l_item[0] == a_h) or\
                                 (len(l_item) == 2 and l_item == (a_h, a_hr)):
                             self.r[a_r, a_h, s, :, th_h] = \
-                                np.sum(self.preferences[:, [a_h, a_hr]], axis=1) + 20
+                                np.sum(self.preferences[:, [a_h, a_hr]], axis=1) + 100
                             break
                     else:
                         self.r[a_r, a_h, s, :, th_h] = \
