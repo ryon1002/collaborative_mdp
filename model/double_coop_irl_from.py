@@ -37,22 +37,10 @@ class CoopIRL(object):
                 for s in range(self.s):
                     self.sum_r[:, s, th_r, th_h] = np.max(self.r[:, :, s, th_r, th_h], axis=1)
 
-        self.v = {}
-        for th_r in range(self.th_r):
-            v = {}
-            for s in range(self.s):
-                v[s] = np.zeros(self.th_h)
-                for th_h in range(self.th_h):
-                    v[s][th_h] = np.max(self.r[:, :, s, th_r, th_h])
-            self.v[th_r] = v
-        # print(self.v)
-        # print(self.sum_r)
-        # print(self.sum_r.shape)
-        # exit()
-
         self.ns = {
             s: {a_r: {a_h: self._ex_all_nx(s, a_r, a_h) for a_h in range(self.a_h)} for a_r in
                 range(self.a_r)} for s in range(self.s)}
+
 
     def _ex_all_nx(self, s, a_r, a_h):
         arr = self.t[a_r, a_h, s]
@@ -63,56 +51,28 @@ class CoopIRL(object):
         pass
 
     def calc_a_vector(self, th_r, d, bs=None, with_a=True):
-        # print(d)
         if d == 1:
-            self.a_vector = {s: util.prune(self.sum_r[:, s, th_r].copy(), bs)
-                             for s in range(self.s)}
+            self.a_vector = {}
+            for s in range(self.s):
+                self.a_vector[s] = np.zeros((1, self.th_h))
+                for th_h in range(self.th_h):
+                    self.a_vector[s][0][th_h] = np.max(self.r[:, :, s, th_r, th_h])
+
             return
         self.calc_a_vector(th_r, d - 1, bs, False)
         a_vector = {}
 
-        v = {th_r:{}}
         for s in range(self.s):
-            # print(s, d)
             a_vector[s] = {}
-            tmp_v = np.zeros((self.a_r, self.th_h))
             for a_r in range(self.a_r):
                 q_vector = np.empty((self.a_h, self.th_h))
                 for a_h in range(self.a_h):
-                    q_vector_a = np.empty((0, self.th_h))
+                    q_vector_a = np.zeros((0, self.th_h))
                     for ns, _p in self.ns[s][a_r][a_h]:
                         q_vector_a = np.concatenate([q_vector_a, self.r[a_r, a_h, s, th_r] +
                                                      self.a_vector[ns]])
-
                     q_vector[a_h] = np.max(q_vector_a, axis=0)
-
-                check_q_vector = np.zeros((self.a_h, self.th_h))
-                for a_h in range(self.a_h):
-                    for th_h in range(self.th_h):
-                        check_q_vector[a_h, th_h] = self.r[a_r, a_h, s, th_r, th_h]
-                        for ns, p in self.ns[s][a_r][a_h]:
-                            check_q_vector[a_h, th_h] += self.v[th_r][ns][th_h] * p
-
-                if not np.array_equal(check_q_vector, q_vector):
-                    print("tiga---u!")
-                    print(check_q_vector)
-                    print(q_vector)
-                    exit()
-
-                # pi = np.apply_along_axis(self._max_q_prob, 0, q_vector)
-                pi = np.apply_along_axis(self._max_q_prob, 0, check_q_vector)
-                pi = np.apply_along_axis(self._avg_prob, 1, pi)
-
-                # print(np.sum(pi * check_q_vector, axis=0))
-                tmp_v[a_r] = np.sum(pi * check_q_vector, axis=0)
-                # for th_h, vvv in enumerate(th_h, vvv):
-                #     tmp_v[a_r] =
-                # # print(pi * check_q_vector)
-                # exit()
-
-                # print(pi, )
-                # print(pi)
-                # exit()
+                pi = np.apply_along_axis(self._max_q_prob, 0, q_vector)
 
                 update = np.empty((self.a_h, self.s, self.th_h))
                 for th in range(self.th_h):
@@ -134,11 +94,8 @@ class CoopIRL(object):
                 for m, i in enumerate(itertools.product(*[range(l) for l in p_a_vector_nums])):
                     a_vector_a[m] = np.sum([p_a_vector[n][j] for n, j in enumerate(i)], axis=0)
                 a_vector_a = util.unique_for_raw(a_vector_a)
-                # a_vector[s][a_r] = self.sum_r[a_r, s, th_r, :] + a_vector_a
                 a_vector[s][a_r] = a_vector_a
-            v[th_r][s] = np.max(tmp_v, axis=0)
-            # exit()
-        self.v = v
+
         if with_a:
             self.a_vector_a = {s: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()}
                                for s, vectorA in a_vector.items()} if bs is not None else a_vector

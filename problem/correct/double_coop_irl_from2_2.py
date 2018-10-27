@@ -28,10 +28,18 @@ class Correct(CoopIRL):
         return tuple(np.where(lack_ids)[0])
 
     def _set_tro(self):
+        self.forbidden_action_r = {s:set() for s in range(self.s)}
+        self.forbidden_action_h = {s:set() for s in range(self.s)}
         shape_list = [range(i) for i in self.shape]
         action_list = [range(self.a_r), range(self.a_h)]
         for i in itertools.product(*shape_list):
             s = np.ravel_multi_index(i, self.shape, "clip")
+            for a_r in range(self.a_r):
+                if i[a_r + self.a_h] == 1:
+                    self.forbidden_action_r[s].add(a_r)
+            for a_h in range(self.a_h):
+                if i[a_h] == 1:
+                    self.forbidden_action_h[s].add(a_h)
             for th_h, objs in enumerate(self.objects):
                 items = np.array(i)
                 lack_items = set(self._check_complete(items, o) for o in objs)
