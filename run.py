@@ -1,10 +1,15 @@
-import pickle
+import json
 import numpy as np
 import matplotlib.pyplot as plt
-from problem.build.double_coop_irl_from2 import Build
-# from problem.build.double_coop_irl_from import Build
-from problem.build.data import BuildData
 
+from problem.graph.double_coop_irl_from2 import Graph
+# from problem.graph.data import GraphData
+from problem.graph.data2 import GraphData
+# from problem.graph.data3 import GraphData
+# from problem.graph.train1 import GraphData
+# from problem.graph.train2 import GraphData
+
+import make_graph
 
 def make_belief(size=2):
     b1 = np.arange(0, 1.01, 0.04)
@@ -19,22 +24,29 @@ def make_belief(size=2):
 def run_chef():
     b = make_belief(2)
 
-    env = Build(BuildData())
+    graph = GraphData()
+    env = Graph(graph)
 
     import time
     start = time.time()
-    for d in [20]:
+    for d in [6]:
         env.calc_a_vector(d, b, with_a=True)
         # env.calc_a_vector(0, d, b, with_a=True)
-    print(time.time() - start)
+
+    scinario = env.make_scinario(0)
+    json.dump(scinario, open("scinario.json", "w"), indent=4)
+    make_graph.make_json(graph)
+
+    # print(env.h_pi)
+    # print(time.time() - start)
     # exit()
-    for a_r in range(env.a_r - 1):
+    for a_r in range(env.a_r):
         # v = np.array([env.value_a(0, a_r, b[i]) for i in range(len(b))])
         v = np.array([env.value_a(0, 0, a_r, b[i]) for i in range(len(b))])
-        print(v)
-    #     plt.plot(b[:, 0], v, label=a_r)
-    # plt.legend()
-    # plt.show()
+        # print(v)
+        plt.plot(b[:, 0], v, label=a_r)
+    plt.legend()
+    plt.show()
 
 
 if __name__ == '__main__':
