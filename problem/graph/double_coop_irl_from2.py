@@ -98,7 +98,7 @@ class Graph(CoopIRL):
         self.t[:, :, -1, -1] = 1
 
     def _make_one_turn(self, i, s, th_r, belief):
-        # print(i, s, th_r, belief)
+        print(i, s, th_r, belief)
         # print([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         best_a_r = np.argmax([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         next_map = {}
