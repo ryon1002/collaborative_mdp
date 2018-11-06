@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 from problem.graph.double_coop_irl_from2 import Graph
 # from problem.graph.data import GraphData
 # from problem.graph.data2 import GraphData
-from problem.graph.data6 import GraphData
-# from problem.graph.data3 import GraphData
+# from problem.graph.data01 import GraphData
+# from problem.graph.data03 import GraphData
+from problem.graph.data04 import GraphData
 # from problem.graph.train1 import GraphData
 # from problem.graph.train2 import GraphData
 
@@ -31,7 +32,7 @@ def run_chef():
     import time
     start = time.time()
     for d in [6]:
-        env.calc_a_vector(d, b, with_a=True)
+        env.calc_a_vector(d, b, 0)
         # env.calc_a_vector(0, d, b, with_a=True)
 
     scinario = env.make_scinario(0)
@@ -46,9 +47,9 @@ def run_chef():
         # v = np.array([env.value_a(0, a_r, b[i]) for i in range(len(b))])
         v = np.array([env.value_a(0, 0, a_r, b[i]) for i in range(len(b))])
         print(v)
-        plt.plot(b[:, 0], v, label=a_r)
-    plt.legend()
-    plt.show()
+    #     plt.plot(b[:, 0], v, label=a_r)
+    # plt.legend()
+    # plt.show()
 
 
 if __name__ == '__main__':

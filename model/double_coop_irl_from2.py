@@ -67,7 +67,7 @@ class CoopIRL(object):
     def _set_tro(self):
         pass
 
-    def calc_a_vector(self, d, bs=None, with_a=True):
+    def calc_a_vector(self, d, bs=None, algo=1):
         if d == 1:
             self.a_vector = {}
             for s in range(self.s):
@@ -95,11 +95,11 @@ class CoopIRL(object):
             #     print(s, self.a_vector[s])
             # exit()
             return
-        self.calc_a_vector(d - 1, bs, False)
+        self.calc_a_vector(d - 1, bs, algo)
 
         a_vector = {s: {th_r: {} for th_r in range(self.th_r)} for s in range(self.s)}
 
-        check_s = 9
+        check_s = 0
         inv_r_pi = {}
         for s in range(self.s):
             r_val = np.zeros((self.a_r, self.th_r))
@@ -127,13 +127,19 @@ class CoopIRL(object):
                     # if d == 6 and s == check_s:
                     #     print("test3", th_r, a_r, tmp_th_h_val)
                     r_val[a_r, th_r] = np.mean(tmp_th_h_val)
-
-            r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
-            # r_pi = np.apply_along_axis(self._max_q_prob, 1, r_val) # bias
+            if algo == 1:
+                r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
+            elif algo == 0:
+                r_pi = np.apply_along_axis(self._max_q_prob, 1, r_val) # bias
             # r_pi = np.apply_along_axis(self._exp_q_prob, 0, r_val)
             # r_pi = np.apply_along_axis(self._exp_q_prob, 1, r_val)
             # print(r_val, r_pi)
-            inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
+            if algo == 2:
+                inv_r_pi[s] = np.zeros((self.a_r, self.th_r))
+                for th_r in range(self.th_r):
+                    inv_r_pi[s][:, th_r] = 1
+            else:
+                inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
             # if d == 6 and s == check_s:
             #     print(r_val)
             #     print(r_pi)
@@ -238,7 +244,7 @@ class CoopIRL(object):
             # print(self.a_vector[4][0])
             # print(self.a_vector[7][0])
             # print(self.a_vector[10][0])
-            exit()
+            # exit()
 
     def value_a(self, s, th_r, a_r, b):
         return np.max(np.dot(self.a_vector_a[s][th_r][a_r], b))

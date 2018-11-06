@@ -16,6 +16,8 @@ class GraphData(object):
             "h1a": {"h2a": 0},
             "h1b": {"h2b": 0},
             "h1c": {"h2c": 0},
+            # "h2a": {"h3a": 0},
+            # "h2b": {"h3b": 0},
             "h2a": {"h3a": 1},
             "h2b": {"h3b": 2},
             "h2c": {"h3c": 0, "h3d": 0},
