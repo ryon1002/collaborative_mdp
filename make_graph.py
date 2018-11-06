@@ -39,11 +39,11 @@ def add_edges_model(out_target, data, type):
             s = type + "_start"
         out_target[s] = list(gs.keys())
 
-def make_json(data):
+def make_json(data, algo, obj):
     json_data = {}
     json_data["nodes"] = []
-    add_nodes(json_data["nodes"], data.h_node, 40, "human", data.items)
-    add_nodes(json_data["nodes"], data.r_node, 520, "agent", data.items, 1)
+    add_nodes(json_data["nodes"], data.h_node, 50, "human", data.items)
+    add_nodes(json_data["nodes"], data.r_node, 530, "agent", data.items, algo + 1)
     json_data["edges"] = []
     add_edges(json_data["edges"], data.h_edge, "human")
     add_edges(json_data["edges"], data.r_edge, "agent")
@@ -51,6 +51,6 @@ def make_json(data):
     json_data["model_r_edge"] = {}
     add_edges_model(json_data["model_h_edge"], data.h_edge, "human")
     add_edges_model(json_data["model_r_edge"], data.r_edge, "agent")
-    json_data["height"] = len(data.h_node) * 120 + 80
-
-    json.dump(json_data, open("data.json", "w"), indent=4)
+    json_data["height"] = len(data.h_node) * 120 + 90
+    json_data["target"] = obj
+    return json_data

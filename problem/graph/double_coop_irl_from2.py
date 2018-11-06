@@ -111,7 +111,7 @@ class Graph(CoopIRL):
         self.t[:, :, -1, -1] = 1
 
     def _make_one_turn(self, i, s, th_r, belief, last_r_node, last_h_node):
-        print(i, s, th_r, belief, last_r_node, last_h_node)
+        # print(i, s, th_r, belief, last_r_node, last_h_node)
         # print([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         values = np.array([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         max_values = np.max(values)
