@@ -7,7 +7,7 @@ class GraphData(object):
                        ["h3a", "h3b", "h3c", "h3d"], ["h4a", "h4b", "h4c", "h4d"]]
         # self.r_node = [["r1a", "r1b"], ["r2a", "r2b", "r2c", "r2d"], ["r3a", "r3b", "r3c", "r3d"]]
         self.r_node = [["r1a", "r1b", "r1c"], ["r2a", "r2b", "r2c", "r2d"],
-                       ["r3a", "r3b", "r3c", "r3d"], ["r4a", "r4b", "r4c", "r4d"]]
+                       ["r3a", "r3b", "r3c", "r3d"], ["r4a", "r4b", "r4c", "r4d", "r4e", "r4f"]]
 
         self.h_edge = {
             None: {"h1a": 0, "h1b": 0},
@@ -33,9 +33,9 @@ class GraphData(object):
             "r2c": {"r3c": 1},
             "r2d": {"r3d": 2},
             "r3a": {"r4a": 1, "r4b": 1},
-            "r3b": {"r4a": 2, "r4b": 2},
-            "r3c": {"r4c": 1, "r4d": 1},
-            "r3d": {"r4c": 2, "r4d": 2},
+            "r3b": {"r4b": 2, "r4c": 2},
+            "r3c": {"r4d": 1, "r4e": 1},
+            "r3d": {"r4e": 2, "r4f": 2},
         }
 
         self.cost_candidate = np.array([
@@ -51,6 +51,6 @@ class GraphData(object):
             # {"h3b", "h2d", "h3d", "r2a", "r3a", "r2c", "r3c", "r3d"}
             # {"h3a", "h4a", "h4c", "r4a"},
             # {"h4b", "h3d", "h4d", "r4a"}
-            {"h4a", "h4c", "r4a", "r4c"},
-            {"h4b", "h4d", "r4b", "r4d"}
+            {"h4a", "h4c", "r4a", "r4c", "r4d", "r4f"},
+            {"h4b", "h4d", "r4b", "r4e"}
         ]

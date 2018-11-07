@@ -33,8 +33,8 @@ class GraphData(object):
         }
 
         self.cost_candidate = np.array([
-            [-5, -5, -30],
-            [-5, -30, -5],
+            [0, -50, -10],
+            [0, -10, -50],
         ])
 
         self.action_index = \

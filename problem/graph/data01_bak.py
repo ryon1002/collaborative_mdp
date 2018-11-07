@@ -4,11 +4,12 @@ import numpy as np
 class GraphData(object):
     def __init__(self):
         self.h_node = [["h1a", "h1b", "h1c"], ["h2a", "h2b", "h2c"],
-                       ["h3a", "h3b", "h3c", "h3d"], ["h4a", "h4b", "h4c", "h4d"]]
+                       ["h3a", "h3b", "h3c", "h3d"], ["h4a", "h4b", "h4c", "h4d", "h4e", "h4f"]]
         # ["h5a", "h5b", "h5c", "h5d"]]
         # self.r_node = [["r1a", "r1b"], ["r2a", "r2b", "r2c", "r2d"], ["r3a", "r3b", "r3c", "r3d"]]
-        self.r_node = [["r1a", "r1b", "r1c"], ["r2a", "r2b", "r2c", "r2d"],
-                       ["r3a", "r3b", "r3c", "r3d"], ["r4a", "r4b", "r4c", "r4d"]]
+        self.r_node = [["r1a", "r1b", "r1c"], ["r2a", "r2b", "r2c", "r2d", "r2e", "r2f"],
+                       ["r3a", "r3b", "r3c", "r3d", "r3e", "r3f"],
+                       ["r4a", "r4b", "r4c", "r4d", "r4e", "r4f"]]
         # ["r5a", "r5b", "r5c", "r5d"]]
 
         self.h_edge = {
@@ -18,13 +19,13 @@ class GraphData(object):
             "h1c": {"h2c": 0},
             # "h2a": {"h3a": 0},
             # "h2b": {"h3b": 0},
-            "h2a": {"h3a": 1},
-            "h2b": {"h3b": 2},
-            "h2c": {"h3c": 0, "h3d": 0},
-            "h3a": {"h4a": 1},
-            "h3b": {"h4b": 2},
-            "h3c": {"h4a": 1, "h4c": 2},
-            "h3d": {"h4b": 2, "h4d": 1},
+            "h2a": {"h3a": 0},
+            "h2b": {"h3b": 0, "h3c": 0},
+            "h2c": {"h3d": 0},
+            "h3a": {"h4a": 1, "h4b": 2},
+            "h3b": {"h4b": 1, "h4c": 2},
+            "h3c": {"h4d": 1, "h4e": 2},
+            "h3d": {"h4e": 1, "h4f": 2},
             # "h4a": {"h5a": 1},
             # "h4b": {"h5b": 2},
             # "h4c": {"h5c": 2},
@@ -34,15 +35,19 @@ class GraphData(object):
             None: {"r1a": 0, "r1b": 0, "r1c": 0},
             "r1a": {"r2a": 0},
             "r1b": {"r2b": 0},
-            "r1c": {"r2c": 0, "r2d": 0},
-            "r2a": {"r3a": 1},
-            "r2b": {"r3b": 2},
+            "r1c": {"r2c": 0, "r2d": 0, "r2e": 0, "r2f": 0},
+            "r2a": {"r3a": 0},
+            "r2b": {"r3b": 0},
             "r2c": {"r3c": 2},
             "r2d": {"r3d": 1},
-            "r3a": {"r4a": 1},
+            "r2e": {"r3e": 2},
+            "r2f": {"r3f": 1},
+            "r3a": {"r4a": 2},
             "r3b": {"r4b": 2},
             "r3c": {"r4c": 2},
             "r3d": {"r4d": 1},
+            "r3e": {"r4e": 2},
+            "r3f": {"r4f": 1},
             # "r3a": {"r4a": 0},
             # "r3b": {"r4b": 2},
             # "r3c": {"r4c": 1},
@@ -62,10 +67,10 @@ class GraphData(object):
             {a: n for n, a in enumerate(sum(self.h_node, []) + sum(self.r_node, []))}
 
         self.items = [
-            # {"h2a", "h3a", "h3c", "r2a", "r3a", "r2c", "r3c", "r3d"},
-            # {"h3b", "h2d", "h3d", "r2a", "r3a", "r2c", "r3c", "r3d"}
-            {"h3a", "h4a", "h3c", "h4c", "r4a", "r4d"},
-            {"h3b", "h4b", "h3d", "h4d", "r4b", "r4c"}
+            {"h3a", "h3c", "h4a", "h4b", "h4c", "r4a", "r4d", "r4e"},
+            {"h3c", "h3d", "h4d", "h4e", "h4f", "r4b", "r4c", "r4f"}
+            # {"h3a", "h3c", "h4a", "h4b", "h4c", "r4a", "r4d", "r4e"},
+            # {"h3c", "h3d", "h4d", "h4e", "h4f", "r4b", "r4c", "r4f"}
             # {"h5a", "h5c", "r5a", "r5c"},
             # {"h5b", "h5d", "r5b", "r5d"}
         ]
