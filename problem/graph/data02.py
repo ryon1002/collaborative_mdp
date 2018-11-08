@@ -59,7 +59,7 @@ class GraphData(object):
             # {"h3b", "h2d", "h3d", "r2a", "r3a", "r2c", "r3c", "r3d"}
             # {"h3a", "h4a", "h4c", "r4a"},
             # {"h4b", "h3d", "h4d", "r4a"}
-            {"h5a", "h5c", "r5a", "r5c", "r5d", "r5f"},
-            {"h5b", "h5d", "r5b", "r5e"}
+            {"h4a", "h4c", "h5a", "h5c", "r5a", "r5c", "r5d", "r5f"},
+            {"h4b", "h4d", "h5b", "h5d", "r5b", "r5e"}
         ]
 
