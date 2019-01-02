@@ -74,11 +74,11 @@ class CoopIRL(object):
                 self.a_vector[s] = {}
                 for th_r in range(self.th_r):
                     self.a_vector[s][th_r] = np.zeros((1, self.th_h))
-            # self.beliefs = {}
-            # for th_r in range(self.th_r):
-            #     self.beliefs[th_r] = {}
-            #     for s in range(self.s):
-            #         self.beliefs[th_r][s] = np.array([0.5, 0.5])
+            self.beliefs = {}
+            for th_r in range(self.th_r):
+                self.beliefs[th_r] = {}
+                for s in range(self.s):
+                    self.beliefs[th_r][s] = np.array([0.5, 0.5])
             return
         self.calc_a_vector(d - 1, bs, algo)
 
@@ -99,9 +99,9 @@ class CoopIRL(object):
                             tmp_a_h_val[a_h] += self.r[a_r, a_h, s, th_r, th_h]
                         tmp_th_h_val[th_h] = np.max(tmp_a_h_val)
 
-                    r_val[a_r, th_r] = np.mean(tmp_th_h_val)
-                    # belief = bs[th_r][s] if s in bs[th_r] else np.array([0.5, 0.5])
-                    # r_val[a_r, th_r] = np.dot(tmp_th_h_val, belief)
+                    # r_val[a_r, th_r] = np.mean(tmp_th_h_val)
+                    belief = self.beliefs[th_r][s] if s in self.beliefs[th_r] else np.array([0.5, 0.5])
+                    r_val[a_r, th_r] = np.dot(tmp_th_h_val, belief)
             if algo == 1:
                 # r_pi = np.apply_along_axis(self._exp_q_prob, 0, r_val / 10)  # full bayes
                 r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
@@ -156,13 +156,11 @@ class CoopIRL(object):
                     a_vector_a = util.unique_for_raw(a_vector_a)
                     a_vector[s][th_r][a_r] = a_vector_a
         self.a_vector_a = {
-            # s: {th_r: {a_r: util.prune(vector, bs[th_r][s]) for a_r, vector in vectorA.items()} for
             s: {th_r: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()} for
                 th_r, vectorA in th_vector.items()} for s, th_vector in
             a_vector.items()} if bs is not None else a_vector
         # else:
         self.a_vector = {
-            # s: {th_r: util.prune(np.concatenate(list(vector.values()), axis=0), bs[th_r][s]) for
             s: {th_r: util.prune(np.concatenate(list(vector.values()), axis=0), bs) for
                 th_r, vector in th_vector.items()}
             for s, th_vector in a_vector.items()} if bs is not None else a_vector
@@ -185,11 +183,7 @@ class CoopIRL(object):
                                 exit()
                             beliefs[ns] = beliefs[s] * self.h_pi[th_r][s][a_r][a_h]
                             beliefs[ns] /= np.sum(beliefs[ns])
-            for s in range(self.s):
-                if s not in beliefs:
-                    beliefs[s] = np.array([0.5, 0.5])
             self.beliefs[th_r] = beliefs
-        return self.beliefs
 
     def value_a(self, s, th_r, a_r, b):
         return np.max(np.dot(self.a_vector_a[s][th_r][a_r], b))

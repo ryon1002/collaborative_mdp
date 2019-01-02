@@ -3,11 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from problem.graph.double_coop_irl_from2 import Graph
-# from problem.graph.data import GraphData
+from problem.graph.data import GraphData
 # from problem.graph.data2 import GraphData
 # from problem.graph.data01 import GraphData
 # from problem.graph.data03 import GraphData
-from problem.graph.data04 import GraphData
+# from problem.graph.data04 import GraphData
 # from problem.graph.train1 import GraphData
 # from problem.graph.train2 import GraphData
 

@@ -79,8 +79,10 @@ class GraphData(object):
             {a: n for n, a in enumerate(sum(self.h_node, []) + sum(self.r_node, []))}
 
         self.items = [
-            {"h4a", "h4b", "h4c", "h5a", "h5b", "h5c", "r4a", "r4b", "r4c", "r5a", "r5b", "r5c"},
-            {"h4d", "h4e", "h4f", "h5d", "h5e", "h5f", "r4d", "r4e", "r4f", "r5d", "r5e", "r5f"}
+            {"h4a", "h4b", "h4c", "h5a", "h5b", "h5c", "r5a", "r5b", "r5c"},
+            {"h4d", "h4e", "h4f", "h5d", "h5e", "h5f", "r5d", "r5e", "r5f"}
+            # {"h4a", "h4b", "h4c", "h5a", "h5b", "h5c", "r4a", "r4b", "r4c", "r5a", "r5b", "r5c"},
+            # {"h4d", "h4e", "h4f", "h5d", "h5e", "h5f", "r4d", "r4e", "r4f", "r5d", "r5e", "r5f"}
             # {"h3a", "h3c", "h4a", "h4b", "h4c", "r4a", "r4d", "r4e"},
             # {"h3c", "h3d", "h4d", "h4e", "h4f", "r4b", "r4c", "r4f"}
             # {"h5a", "h5c", "r5a", "r5c"},

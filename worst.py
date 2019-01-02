@@ -14,7 +14,7 @@ def _make_one_turn(th_r, graph, last_r_node, last_h_node, r_cost):
     if last_r_node not in graph.r_edge:
         return (last_r_node, None), value + r_cost
     best_cost = -1000
-    ret = None
+    ret = []
     for a_r, r_r in graph.r_edge[last_r_node].items():
         next_map = {}
         next_cost = []
@@ -24,10 +24,28 @@ def _make_one_turn(th_r, graph, last_r_node, last_h_node, r_cost):
             next_map[a_h] = m
             next_cost.append(c)
         next_cost = min(next_cost)
+        # ret.append((next_cost, (a_r, next_map)))
+        # next_cost = min(next_cost)
         if next_cost > best_cost:
-            ret = (a_r, next_map), next_cost
-        # print(last_h_node, last_r_node, a_r, next_map, cost)
+            best_cost = next_cost
+            ret = [(a_r, next_map)], next_cost
     return ret
+
+    print(ret)
+    values = np.array([r[0] for r in ret])
+    print(values)
+    values = np.max(values)
+    max_values = np.max(values)
+    # if sum(values == max_values) == 1:
+    # if sum(values == max_values) > 1:
+    #     print("check")
+    #     exit()
+    # retrun = ret[np.argmax(values)]
+
+        # next_cost = min(next_cost)
+        # if next_cost > best_cost:
+        #     ret = (a_r, next_map), next_cost
+    # return ret
 
 
     # if sum(values == max_values) == 1:

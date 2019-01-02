@@ -46,6 +46,8 @@ class GraphData(object):
             # {"h3b", "h2d", "h3d", "r2a", "r3a", "r2c", "r3c", "r3d"}
             # {"h3a", "h4a", "h4c", "r4a"},
             # {"h4b", "h3d", "h4d", "r4a"}
-            {"h4a", "h4c", "r4a", "r4c"},
-            {"h4b", "h4d", "r4b", "r4d"}
+            # {"h4a", "h4c", "r4a", "r4c"},
+            # {"h4b", "h4d", "r4b", "r4d"}
+            {"h3a", "h3c", "h4a", "h4c", "r4a", "r4c"},
+            {"h3b", "h3d", "h4b", "h4d", "r4b", "r4d"}
         ]

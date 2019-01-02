@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from model.double_coop_irl_from2 import CoopIRL
+# from model.double_coop_irl_from2_bak2 import CoopIRL
 
 
 class Graph(CoopIRL):
@@ -115,26 +116,40 @@ class Graph(CoopIRL):
         # print([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         values = np.array([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         max_values = np.max(values)
-        if sum(values == max_values) == 1:
-            best_a_r = np.argmax([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
-        else :
+        # if sum(values == max_values) == 1:
+        # if sum(values == max_values) > 1:
+        #     print(i, s)
+        #     print("check")
+        #     exit()
+
+        best_a_rs = np.where(values == max_values)[0]
+        # if len(best_a_rs) > 1:
+        #     print(len(best_a_rs), s, values)
+        #     exit()
+
+        if len(best_a_rs) > 1:
             values_1 = np.array([self.value_a(s, th_r, a_r, [1, 0]) for a_r in range(self.a_r)])
             values_2 = np.array([self.value_a(s, th_r, a_r, [0, 1]) for a_r in range(self.a_r)])
-            best_a_r = np.argmax(values + values_1 + values_2)
-        next_map = {}
-        h_node = sorted(self.graph_data.h_edge[last_h_node].keys())
-        r_node = sorted(self.graph_data.r_edge[last_r_node].keys())
-        for a_h in range(len(h_node)):
-            n_s = np.argmax(self.t[best_a_r, a_h, s])
-            # print(n_s)
-            if n_s == self.s - 1:
-                # print(s)
-                # exit()
-                next_map[h_node[a_h]] = None
-            else:
-                n_b = belief.copy() * self.h_pi[th_r][s][best_a_r][a_h]
-                next_map[h_node[a_h]] = self._make_one_turn(i + 1, n_s, th_r, n_b, r_node[best_a_r], h_node[a_h])
-        return (r_node[best_a_r], next_map)
+            best_a_rs = [np.argmax(values + values_1 + values_2)]
+        ret = []
+
+        for best_a_r in best_a_rs:
+            next_map = {}
+            h_node = sorted(self.graph_data.h_edge[last_h_node].keys())
+            r_node = sorted(self.graph_data.r_edge[last_r_node].keys())
+            for a_h in range(len(h_node)):
+                n_s = np.argmax(self.t[best_a_r, a_h, s])
+                # print(n_s)
+                if n_s == self.s - 1:
+                    # print(s)
+                    # exit()
+                    next_map[h_node[a_h]] = None
+                else:
+                    n_b = belief.copy() * self.h_pi[th_r][s][best_a_r][a_h]
+                    next_map[h_node[a_h]] = self._make_one_turn(i + 1, n_s, th_r, n_b, r_node[best_a_r], h_node[a_h])
+            # return ([r_node[best_a_r], next_map])
+            ret.append((r_node[best_a_r], next_map))
+        return ret
         # return (int(best_a_r), next_map)
 
     def make_scinario(self, th_r):
