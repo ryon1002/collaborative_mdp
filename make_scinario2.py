@@ -49,19 +49,18 @@ def run_chef(graph_id, dir_name, algo, obj, pref):
             for d in [7]:
                 # env.calc_a_vector(d, beliefs, algo)
                 env.calc_a_vector(d, b, algo)
-            print(beliefs)
+            # print(beliefs)
             scinario = env.make_scinario(pref)
         json.dump(scinario, open(dir_name + "scinario.json", "w"), indent=4)
 
     for a_r in range(env.a_r):
         v = np.array([env.value_a(0, 0, a_r, b[i]) for i in range(len(b))])
-        print(ii)
         print(v)
         if v[0] == -2000:
             continue
         plt.plot(b[:, 0], v, label=a_r)
     plt.legend()
-    plt.show()
+    # plt.show()
 
 if __name__ == '__main__':
     # run_chef("t1", "train1", 0, 0, 0)

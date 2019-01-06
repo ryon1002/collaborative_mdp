@@ -1,7 +1,7 @@
 import itertools
 import numpy as np
-from model.double_coop_irl_from2 import CoopIRL
-# from model.double_coop_irl_from2_bak2 import CoopIRL
+# from model.double_coop_irl_from2 import CoopIRL
+from model.double_coop_irl_from2_bak2 import CoopIRL
 
 
 class Graph(CoopIRL):
