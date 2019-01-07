@@ -29,16 +29,6 @@ class CoopIRL(object):
         ret = np.exp(arr * 1)
         if np.sum(ret) == 0:
             ret = np.ones_like(ret)
-        # print("nn", ret, arr)
-        # if ret[0] != ret[0]:
-        #     exit()
-        # if ret[1] != ret[1]:
-        #     exit()
-        # if len(ret) > 2:
-        #     if ret[2] != ret[2]:
-        #         exit()
-        #     if ret[3] != ret[3]:
-        #         exit()
         return ret / np.sum(ret)
 
     def _avg_prob(self, arr):
@@ -100,7 +90,7 @@ class CoopIRL(object):
                 r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
                 inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
             elif algo == 0:
-                r_pi = np.apply_along_axis(self._max_q_prob, 1, r_val) # bias
+                r_pi = np.apply_along_axis(self._max_q_prob, 1, r_val)  # bias
                 inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
 
         self.h_pi = {}
@@ -147,21 +137,26 @@ class CoopIRL(object):
                         a_vector_a[m] = np.sum([p_a_vector[n][j] for n, j in enumerate(i)], axis=0)
                     a_vector_a = util.unique_for_raw(a_vector_a)
                     a_vector[s][th_r][a_r] = a_vector_a
-        self.a_vector_a = {
-            s: {th_r: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()} for
-                th_r, vectorA in th_vector.items()} for s, th_vector in
-            a_vector.items()} if bs is not None else a_vector
+        self.a_vector_a = \
+            {s: {th_r:
+                     {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()}
+                 for th_r, vectorA in th_vector.items()}
+             for s, th_vector in a_vector.items()} if bs is not None else a_vector
         # else:
         self.a_vector = {
             s: {th_r: util.prune(np.concatenate(list(vector.values()), axis=0), bs) for
                 th_r, vector in th_vector.items()}
             for s, th_vector in a_vector.items()} if bs is not None else a_vector
+        # print(self.a_vector_a)
+        # exit()
 
     def value_a(self, s, th_r, a_r, b):
         return np.max(np.dot(self.a_vector_a[s][th_r][a_r], b))
 
     def value(self, s, th_r, b):
         return np.max(np.dot(self.a_vector[s][th_r], b))
+
+    # def check
 
     def get_best_action(self, s, b):
         value_map = {k: np.max(np.dot(v, b)) for k, v in self.a_vector_a[s].viewitems()}

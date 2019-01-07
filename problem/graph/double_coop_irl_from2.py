@@ -1,12 +1,13 @@
 import itertools
 import numpy as np
 # from model.double_coop_irl_from2 import CoopIRL
-from model.double_coop_irl_from2_bak2 import CoopIRL
+from model.double_coop_irl_from2_bak3 import CoopIRL
 
 
 class Graph(CoopIRL):
     def __init__(self, graph_data):
         self.graph_data = graph_data
+        self.state_map = {}
         a_h_list = [len(n) for n in graph_data.h_node]
         a_r_list = [len(n) for n in graph_data.r_node]
 
@@ -27,13 +28,28 @@ class Graph(CoopIRL):
         super().__init__(s, a_r, a_h, len(graph_data.cost_candidate), len(graph_data.items))
         # super().__init__(s, max(a_r_list), max(a_h_list), a_h, a_r)
 
+        # for i, s in sorted(self.state_map.items(), key=lambda x:x[1]):
+        #     print(s, i)
+
+        self.b_map = {0:np.array([0.5, 0.5]), 39:np.array([0.5, 0.5])}
+        for i, s in sorted(self.state_map.items(), key=lambda x:x[1]):
+            if len(i) <= 2:
+                self.b_map[s] = np.array([0.5, 0.5])
+            else:
+                if i[1][-1] in ["a", "c"]:
+                    self.b_map[s] = np.array([1.0, 0.0])
+                elif i[1][-1] in ["b", "d"]:
+                    self.b_map[s] = np.array([0.0, 1.0])
+        # print(b_map)
+        # exit()
+
+
     def _count_state(self, counter, node, edges, layer, limit):
         counter[layer] += 1
         if layer == limit:
             return
         for g in edges[node].keys():
             self._count_state(counter, g, edges, layer + 1, limit)
-
 
     def _calc_num_conbination(self, list):
         return int(sum([np.product(list[:i]) for i in range(len(list) + 1)]))
@@ -60,18 +76,11 @@ class Graph(CoopIRL):
         current_state = {}
 
         for i in range(len(self.graph_data.h_node)):
-            # h_node = self.graph_data.h_node[i]
-            # r_node = self.graph_data.r_node[i]
             for items, s in prev_states.items():
                 p_ac_h, p_ac_r = last_actions[s]
                 edge_h, edge_r = self.graph_data.h_edge[p_ac_h], self.graph_data.r_edge[p_ac_r]
-                # print(p_ac_h, p_ac_r)
-                # print(edge_h, edge_r)
                 h_node = sorted(edge_h.keys())
                 r_node = sorted(edge_r.keys())
-                # print(h_node)
-                # r_node = self.graph_data.r_node[i]
-                # exit()
 
                 for a_h, a_r in itertools.product(range(self.a_h), range(self.a_r)):
                     ac_h = h_node[a_h] if a_h < len(h_node) else None
@@ -100,32 +109,19 @@ class Graph(CoopIRL):
                             self.r[a_r, a_h, s, :, th_h] += 400
                         if ac_r in self.graph_data.items[th_h]:
                             self.r[a_r, a_h, s, :, th_h] += 400
-                        # if self.r[a_r, a_h, s, 0, th_h] > 100:
-                        #     print(items, th_h, a_h, a_r)
 
             prev_states = current_state
             prev_states_num += len(prev_states)
-            # print(current_state)
+            self.state_map.update(current_state)
             current_state = {}
 
-        # self.r = np.zeros((self.a_r, self.a_h, self.s, self.th_r, self.th_h))
         self.t[:, :, -1, -1] = 1
 
     def _make_one_turn(self, i, s, th_r, belief, last_r_node, last_h_node):
-        # print(i, s, th_r, belief, last_r_node, last_h_node)
-        # print([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         values = np.array([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
         max_values = np.max(values)
-        # if sum(values == max_values) == 1:
-        # if sum(values == max_values) > 1:
-        #     print(i, s)
-        #     print("check")
-        #     exit()
 
         best_a_rs = np.where(values == max_values)[0]
-        # if len(best_a_rs) > 1:
-        #     print(len(best_a_rs), s, values)
-        #     exit()
 
         if len(best_a_rs) > 1:
             values_1 = np.array([self.value_a(s, th_r, a_r, [1, 0]) for a_r in range(self.a_r)])
@@ -139,34 +135,20 @@ class Graph(CoopIRL):
             r_node = sorted(self.graph_data.r_edge[last_r_node].keys())
             for a_h in range(len(h_node)):
                 n_s = np.argmax(self.t[best_a_r, a_h, s])
-                # print(n_s)
                 if n_s == self.s - 1:
-                    # print(s)
-                    # exit()
                     next_map[h_node[a_h]] = None
                 else:
                     n_b = belief.copy() * self.h_pi[th_r][s][best_a_r][a_h]
                     next_map[h_node[a_h]] = self._make_one_turn(i + 1, n_s, th_r, n_b, r_node[best_a_r], h_node[a_h])
-            # return ([r_node[best_a_r], next_map])
             ret.append((r_node[best_a_r], next_map))
         return ret
-        # return (int(best_a_r), next_map)
 
     def make_scinario(self, th_r):
-        # turn = len(self.graph_data.h_node)
         belief = np.array([0.5, 0.5])
         policy_map = {None : {}}
         # current_pos = policy_map[None]
         # self._make_one_turn(policy_map[None], 0, th_r, belief)
         policy_map = {None : self._make_one_turn(0, 0, th_r, belief, None, None)}
-        # print(policy_map)
-        # for i in range(turn):
-        #     best_a_r = np.argmax([self.value_a(s, th_r, a_r, belief) for a_r in range(self.a_r)])
-        #     print(best_a_r)
-        #     for
-        #
-        #     # a_r =
-        #     break
         return {"human_start":policy_map[None]}
 
 
