@@ -7,7 +7,7 @@ def calc_h_value(v):
     v[v < 0] = 500
     return np.min(v)
 
-def make_worst(index, env):
+def make_worst(index, target, env):
     conv_action = {0: 2, 1: 1, 2: 4, 3: 3, 4: 0}
     s_queue = set(range(env.s - 1))
 
@@ -70,7 +70,7 @@ def make_worst(index, env):
         actions[int(s)] = conv_action[a_r]
     # print(actions[4])
     # print(nexts[4])
-    json.dump({"actions": actions, "nexts": nexts},
+    json.dump({"actions": actions, "nexts": nexts, "target": target},
               open("ct_data/scinario_" + str(index) + "_3.json", "w"), indent=4)
 
     # print(s_map)

@@ -11,9 +11,9 @@ import make_graph
 # from problem.ct.data1 import CTData
 # from problem.ct.data2 import CTData
 # from problem.ct.data3 import CTData
-from problem.ct.data4 import CTData
+# from problem.ct.data4 import CTData
 # from problem.ct.data10 import CTData
-# from problem.ct.data11 import CTData
+from problem.ct.data11 import CTData
 
 def make_belief():
     b1 = np.arange(0, 1.01, 0.04)
@@ -55,13 +55,14 @@ def make_belief():
 
 import pickle
 if __name__ == '__main__':
-    algo = 2
-    index = 4
+    algo, target, main_th_r = 1, 0, 0
+    # algo, target, main_th_r = 2, 1, 0
+    index = 11
     env = ColorTrails(CTData())
     env.make_data(index)
     # exit()
 
-    env.a_vector_a, env.h_pi = pickle.load(open("policy.pkl", "rb"))
+    # env.a_vector_a, env.h_pi = pickle.load(open("policy.pkl", "rb"))
     # env.make_scinario(0, 1, algo)
     # scinario = worst2.make_worst(2, env)
     # exit()
@@ -81,8 +82,8 @@ if __name__ == '__main__':
     for d in [7]:
         # env.calc_a_vector(d, beliefs, 1)
         env.calc_a_vector(d, b, algo)
-    env.make_scinario(0, index, algo)
-    scinario = worst2.make_worst(index, env)
+    env.make_scinario(main_th_r, index, algo, target)
+    scinario = worst2.make_worst(index, 0, env)
     # pickle.dump((env.a_vector_a, env.h_pi), open("policy.pkl", "wb"))
 
 

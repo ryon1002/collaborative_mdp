@@ -156,7 +156,7 @@ class ColorTrails(CoopIRL):
         }
         json.dump(data, open("ct_data/data_" + str(index) + ".json", "w"), indent=4)
 
-    def make_scinario(self, th_r, index, algo):
+    def make_scinario(self, th_r, index, algo, target):
         conv_action = {0: 2, 1: 1, 2: 4, 3: 3, 4: 0}
         s_candi = set([0])
         b_map = {0: np.array([0.5, 0.5])}
@@ -189,7 +189,7 @@ class ColorTrails(CoopIRL):
                 nexts[s] = next
             actions[s] = int(conv_action[a_r])
         # print(actions)
-        json.dump({"actions": actions, "nexts": nexts},
+        json.dump({"actions": actions, "nexts": nexts, "target": target},
                   open("ct_data/scinario_" + str(index) + "_" + str(algo) + ".json", "w"), indent=4)
         # json.dump(actions, open("ct_data/scinario_" + str(index) + "_" + str(algo) + ".json", "w"), indent=4)
 
