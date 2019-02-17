@@ -72,7 +72,7 @@ class CoopIRL(object):
 
         a_vector = {s: {th_r: {} for th_r in range(self.th_r)} for s in range(self.s)}
 
-        check_s = 0
+        check_s = 19
         inv_r_pi = {}
         for s in range(self.s):
             r_val = np.zeros((self.a_r, self.th_r))
@@ -91,12 +91,23 @@ class CoopIRL(object):
                     belief = self.beliefs[th_r][s] if s in self.beliefs[th_r] else np.array([0.5, 0.5])
                     r_val[a_r, th_r] = np.dot(tmp_th_h_val, belief)
             if algo == 1:
-                # r_pi = np.apply_along_axis(self._exp_q_prob, 0, r_val / 10)  # full bayes
-                r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
-                inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
+                r_pi = np.apply_along_axis(self._exp_q_prob, 0, r_val / 10)  # full bayes
+                # r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
+                # inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
+                inv_r_pi[s] = np.apply_along_axis(self._exp_q_prob, 1, r_pi)
+                # if d == 6 and s == 0:
+                #     print(r_pi)
+                #     print(r_val)
+                #     print(inv_r_pi[0])
+                #     exit()
             elif algo == 0:
                 r_pi = np.apply_along_axis(self._max_q_prob, 1, r_val) # bias
                 inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
+                # if d == 6 and s == 0:
+                #     print(r_pi)
+                #     print(r_val)
+                #     print(inv_r_pi[0])
+                #     exit()
 
         self.h_pi = {}
         for th_r in range(self.th_r):
@@ -115,22 +126,29 @@ class CoopIRL(object):
                                 q_vector2_a = np.concatenate([q_vector2_a,
                                                               self.r[a_r, a_h, s, th_r2] +
                                                               self.a_vector[ns][th_r2]])
+                            #     if d == 6 and s == 0 and a_r == 0:
+                            #         print(a_h, ns, th_r2, self.a_vector[ns][th_r2], self.r[a_r, a_h, s, th_r2])
+                            # if d == 6 and s == 0 and a_r == 0:
+                            #     print(a_h, q_vector2_a)
+                            #     print(inv_r_pi[s][a_r, th_r2])
                             q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s][a_r, th_r2], axis=0)
 
                     pi = np.apply_along_axis(self._max_q_prob, 0, q_vector_2)
+                    # if d == 6 and s == 0 and a_r == 0:
+                    #     print(q_vector_2)
+                    #     print(pi)
+                    #     exit()
                     self.h_pi[th_r][s][a_r] = np.apply_along_axis(self._exp_q_prob, 1, pi)
                     # self.h_pi[th_r][s][a_r] = np.apply_along_axis(self._exp_q_prob, 1,
                     #                                               q_vector_2 / 1000)
+                    # if d == 6 and s == 53 and a_r == 0:
+                    #     print(self.h_pi)
 
                     update = np.empty((self.a_h, self.s, self.th_h))
                     for th in range(self.th_h):
                         t = np.sum(self.t[a_r, :, s] * pi[:, th][:, np.newaxis], axis=0)
                         update[:, :, th] = np.outer(pi[:, th], t)
                     update = np.apply_along_axis(self._avg_prob, 0, update)
-                    # if d == 7 and s == 0:
-                    #     print(update)
-                    #     print(update.shape)
-                    #     exit()
 
                     p_a_vector = []
                     p_a_vector_nums = []
@@ -141,22 +159,12 @@ class CoopIRL(object):
                                 [tmp_p_a_vector,
                                  self.a_vector[ns][th_r] * update[a_h, ns] +
                                  self.r[a_r, a_h, s, th_r, :] * pi[a_h, :]])
-                        #     if d == 7 and a_r == 0 and s == 0:
-                        #         print("-")
-                        #         print(self.a_vector[ns][th_r], update[a_h, ns])
-                        #         print(tmp_p_a_vector)
-                        # if d == 7 and a_r == 0 and s == 0:
-                        #     print("---")
-                        #     print(tmp_p_a_vector)
                         p_a_vector.append(util.unique_for_raw(tmp_p_a_vector))
                         p_a_vector_nums.append(len(p_a_vector[-1]))
                     a_vector_a = np.zeros((np.prod(p_a_vector_nums), self.th_h))
-                    # if d == 7 and a_r == 0 and s == 0:
-                    #     print(p_a_vector)
-                    #     exit()
                     for m, i in enumerate(itertools.product(*[range(l) for l in p_a_vector_nums])):
                         a_vector_a[m] = np.sum([p_a_vector[n][j] for n, j in enumerate(i)], axis=0)
-                    # if d == 7 and a_r == 0 and s == 0:
+                    # if a_r == 1 and d == 8 and s == 8:
                     #     print(a_vector_a)
                     #     exit()
                     a_vector_a = util.unique_for_raw(a_vector_a)
@@ -165,11 +173,31 @@ class CoopIRL(object):
             s: {th_r: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()} for
                 th_r, vectorA in th_vector.items()} for s, th_vector in
             a_vector.items()} if bs is not None else a_vector
+
         # else:
         self.a_vector = {
             s: {th_r: util.prune(np.concatenate(list(vector.values()), axis=0), bs) for
                 th_r, vector in th_vector.items()}
             for s, th_vector in a_vector.items()} if bs is not None else a_vector
+        print(d)
+        # if d == 7:
+        #     print(self.a_vector_a[1])
+        #     print(self.a_vector[1])
+        # #     print(self.ns[8])
+        #     print(self.a_vector_a[0][0])
+        #     print(self.h_pi[0][0][0])
+        #     print(self.h_pi[0][0][2])
+        #     print(self.a_vector[0][0])
+        #     print(self.a_vector[1][0])
+        #     print(self.a_vector[53][0])
+        #     print(self.a_vector[105][0])
+        #     print(self.a_vector[134][0])
+        #     exit()
+        #     print(self.a_vector_a[12])
+        # #     print(self.a_vector_a[12])
+        # #     print(self.a_vector[12])
+        # #     # print(self.ns[12])
+        #     exit()
         # self.calc_belief()
 
     def calc_belief(self):

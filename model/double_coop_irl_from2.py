@@ -29,16 +29,6 @@ class CoopIRL(object):
         ret = np.exp(arr * 1)
         if np.sum(ret) == 0:
             ret = np.ones_like(ret)
-        # print("nn", ret, arr)
-        # if ret[0] != ret[0]:
-        #     exit()
-        # if ret[1] != ret[1]:
-        #     exit()
-        # if len(ret) > 2:
-        #     if ret[2] != ret[2]:
-        #         exit()
-        #     if ret[3] != ret[3]:
-        #         exit()
         return ret / np.sum(ret)
 
     def _avg_prob(self, arr):
