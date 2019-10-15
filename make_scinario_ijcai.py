@@ -57,7 +57,7 @@ import pickle
 if __name__ == '__main__':
     algo, target, main_th_r = 1, 0, 0
     # algo, target, main_th_r = 2, 1, 0
-    index = 11
+    index = 1
     env = ColorTrails(CTData())
     env.make_data(index)
     # exit()
@@ -91,9 +91,11 @@ if __name__ == '__main__':
         v = np.array([env.value_a(0, 0, a_r, b[i]) for i in range(len(b))])
         if np.max(v) < -999:
             continue
+        # print(v)
         plt.plot(b[:, 0], v, label=a_r)
         plt.legend()
-    plt.show()
+    # plt.show()
+
     # for a_r in range(env.a_r):
     #     v = np.array([env.value_a(11, 0, a_r, b[i]) for i in range(len(b))])
     #     if np.max(v) < -999:

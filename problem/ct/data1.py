@@ -21,6 +21,7 @@ class CTData(object):
                                [3, 0, 2, 2, 2],
                                [1, 1, 1, 3, 2]])
         self.shape = self.color.shape
+        self.index = 1
 
         self.bomb = {(0, 3): 0,
                      (2, 0): 1}
