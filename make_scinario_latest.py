@@ -7,6 +7,7 @@ from algo.double_coop_irl import CoopIRL
 from problem.ct.ct_data_mdp import ColorTrails
 # from problem.ct.data1 import CTData
 from problem.grid_graph.map import ItemMap
+from problem.p_e.maze import Maze
 
 
 def make_belief():
@@ -18,40 +19,31 @@ if __name__ == '__main__':
     algo, target, main_th_r = 1, 0, 0
     # algo, target, main_th_r = 2, 1, 0
     index = 1
-    env_module = importlib.import_module(f"problem.grid_graph.data{index}")
-    im = ItemMap()
-    item_dist, agent_dist = im.make_matrix()
-    data = env_module.GraphData(item_dist, agent_dist)
-    check = data.check_data()
-    exit()
-    dist_base = np.zeros((6, 2), dtype=int)
-    dist_base[:, 0] = [-3, -2, -1, 1, 2, 3]
-    # dist_base[:, 0] = [-6, -4, -2, 2, 4, 6]
-    min = -1
-    for l in itertools.product(range(-6, 7), repeat=6):
-        dist_base[:, 1] = l
-        im = ItemMap(dist_base)
-        item_dist, agent_dist = im.make_matrix()
-        data = env_module.GraphData(item_dist, agent_dist)
-        check = data.check_data()
-        if not check:
-            t_min = np.min(np.abs(im.items[1:, 1] - im.items[:-1, 1]))
-            if t_min > min:
-                print(t_min)
-                print(item_dist, "\n",agent_dist)
-                print(im.items)
-                print()
-                min = t_min
-            # exit()
-    exit()
+    # actions = [(0, 0), (0, 0), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (1, 2)]
+    # actions = [(0, 2)] * 2 + [(0, 0)] * 2 + [(2, 0)] * 2 + [(2, 1)] * 2 + [(2, 1)]
+    actions = [(0, 2)] * 2 + [(0, 0)] * 2 + [(2, 0)] * 2 + [(2, 1)] * 4 + [(1, 2)] * 3
+    maze = Maze("problem/p_e/map_data/map1")
+    # maze.show_world()
+    step = 0
+    # while True:
+    #     h_a = int(input())
+    #     print(h_a)
+    # for a in actions:
+    #     maze._move(*a)
+    # maze.show_world()
 
-    for i in range(100000):
-        if i % 1000 == 0:
-            print(i)
-        data = env_module.GraphData()
-        data.check_data()
+    # # exit()
+    # # env_module = importlib.import_module(f"problem.grid_graph.data{index}")
+    # # print()
+    #
+    # for i in range(100000):
+    #     if i % 1000 == 0:
+    #         print(i)
+    #     data = env_module.GraphData()
+    #     data.check_data()
+    #
+    # exit()
 
-    exit()
     env = ColorTrails(env_module.CTData())
     env.make_data()
     irl = CoopIRL()
