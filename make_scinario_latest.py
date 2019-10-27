@@ -2,6 +2,7 @@ import itertools
 import matplotlib.pyplot as plt
 import importlib
 import numpy as np
+import copy
 
 from algo.double_coop_irl import CoopIRL
 from problem.ct.ct_data_mdp import ColorTrails
@@ -15,16 +16,27 @@ def make_belief():
     b2 = 1 - b1
     return np.concatenate(([b1], [b2]), axis=0).T
 
+
+
+
+
+
 if __name__ == '__main__':
     algo, target, main_th_r = 1, 0, 0
     # algo, target, main_th_r = 2, 1, 0
     index = 1
     # actions = [(0, 0), (0, 0), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1), (1, 2)]
     # actions = [(0, 2)] * 2 + [(0, 0)] * 2 + [(2, 0)] * 2 + [(2, 1)] * 2 + [(2, 1)]
-    actions = [(0, 2)] * 2 + [(0, 0)] * 2 + [(2, 0)] * 2 + [(2, 1)] * 4 + [(1, 2)] * 3
-    maze = Maze("problem/p_e/map_data/map1")
+    # actions = [(0, 2)] * 2 + [(0, 0)] * 2 + [(2, 0)] * 2 + [(2, 1)] * 2
+    # actions = [(0, 0)] * 3 + [(0, 1)] + [(2, 1)] * 4
+    maze = Maze("problem/p_e/map_data/map2")
+    # for a in actions:
+    #     maze.move(*a)
+    maze.show_world()
     # maze.show_world()
-    step = 0
+    exit()
+    # maze.show_world()
+    # step = 0
     # while True:
     #     h_a = int(input())
     #     print(h_a)
@@ -70,7 +82,6 @@ if __name__ == '__main__':
     # env.make_scinario(main_th_r, index, algo, target)
     # scinario = worst2.make_worst(index, 0, env)
     # pickle.dump((env.a_vector_a, env.h_pi), open("policy.pkl", "wb"))
-
 
     for a_r in range(env.a_r):
         v = np.array([irl.value_a(0, 0, a_r, b[i]) for i in range(len(b))])
