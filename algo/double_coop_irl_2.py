@@ -34,42 +34,45 @@ class CoopIRL(object):
 
         a_vector = {s: {th_r: {} for th_r in range(env.th_r)} for s in range(env.s)}
 
-        inv_r_pi = {}
-        for s in range(env.s):
-            r_val = np.zeros((env.a_r, env.th_r))
-            for th_r in range(env.th_r):
-                for a_r in range(env.a_r):
-                    tmp_th_h_val = np.zeros(env.th_h)
-                    for th_h in range(env.th_h):
-                        tmp_a_h_val = np.zeros(env.a_h)
-                        for a_h in range(env.a_h):
-                            for ns, _p in env.ns[s][a_r][a_h]:
-                                tmp_a_h_val[a_h] += np.max(self.a_vector[ns][th_r][:, th_h])
-                            tmp_a_h_val[a_h] += env.r[a_r, a_h, s, th_r, th_h]
-                        tmp_th_h_val[th_h] = np.max(tmp_a_h_val)
-
-                    # r_val[a_r, th_r] = np.mean(tmp_th_h_val)
-                    belief = self.beliefs[th_r][s] if s in self.beliefs[th_r] else self.default_belief
-                    r_val[a_r, th_r] = np.dot(tmp_th_h_val, belief)
-            if algo == 1:
-                r_pi = np.apply_along_axis(prob_util._exp_q_prob, 0, r_val / 10)  # full bayes
-                # r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
-                # inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
-                inv_r_pi[s] = np.apply_along_axis(prob_util._exp_q_prob, 1, r_pi)
+        # inv_r_pi = {}
+        # for s in range(env.s):
+        #     r_val = np.zeros((env.a_r, env.th_r))
+        #     for th_r in range(env.th_r):
+        #         for a_r in range(env.a_r):
+        #             tmp_th_h_val = np.zeros(env.th_h)
+        #             for th_h in range(env.th_h):
+        #                 tmp_a_h_val = np.zeros(env.a_h)
+        #                 for a_h in range(env.a_h):
+        #                     for ns, _p in env.ns[s][a_r][a_h]:
+        #                         tmp_a_h_val[a_h] += np.max(self.a_vector[ns][th_r][:, th_h])
+        #                     tmp_a_h_val[a_h] += env.r[a_r, a_h, s, th_r, th_h]
+        #                 tmp_th_h_val[th_h] = np.max(tmp_a_h_val)
+        #
+        #             # r_val[a_r, th_r] = np.mean(tmp_th_h_val)
+        #             belief = self.beliefs[th_r][s] if s in self.beliefs[th_r] else self.default_belief
+        #             r_val[a_r, th_r] = np.dot(tmp_th_h_val, belief)
+            # if algo == 1:
+            #     r_pi = np.apply_along_axis(prob_util._exp_q_prob, 0, r_val / 10)  # full bayes
+            #     # r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
+            #     # inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
+            #     inv_r_pi[s] = np.apply_along_axis(prob_util._exp_q_prob, 1, r_pi)
                 # if d == 6 and s == 0:
                 #     print(r_pi)
                 #     print(r_val)
                 #     print(inv_r_pi[0])
                 #     exit()
-            elif algo == 0:
-                r_pi = np.apply_along_axis(prob_util._max_q_prob, 1, r_val) # bias
-                inv_r_pi[s] = np.apply_along_axis(prob_util._max_q_prob, 1, r_pi)
+            # elif algo == 0:
+            #     r_pi = np.apply_along_axis(prob_util._max_q_prob, 1, r_val) # bias
+            #     inv_r_pi[s] = np.apply_along_axis(prob_util._max_q_prob, 1, r_pi)
                 # if d == 6 and s == 0:
                 #     print(r_pi)
                 #     print(r_val)
                 #     print(inv_r_pi[0])
                 #     exit()
-
+        # print(inv_r_pi.shape())
+        inv_r_pi = self.h_belief.copy()
+        # print(inv_r_pi.shape)
+        # exit()
         self.h_pi = {}
         for th_r in range(env.th_r):
             self.h_pi[th_r] = {}
@@ -82,20 +85,33 @@ class CoopIRL(object):
                     q_vector_2 = np.zeros((env.a_h, env.th_h))
                     for a_h in range(env.a_h):
                         for th_r2 in range(env.th_r):
-                            q_vector2_a = np.zeros((0, env.th_h))
-                            for ns, _p in env.ns[s][a_r][a_h]:
-                                q_vector2_a = np.concatenate([q_vector2_a,
-                                                              env.r[a_r, a_h, s, th_r2] +
-                                                              self.a_vector[ns][th_r2]])
+                            q_vector2_a = np.zeros((1, env.th_h))
+                            for ns, p in env.ns[s][a_r][a_h]:
+                                # q_vector2_a = np.concatenate([q_vector2_a,
+                                #                               env.r[a_r, a_h, s, th_r2] * p +
+                                #                               self.a_vector[ns][th_r2]* p])
+                                q_vector2_a += ((env.r[a_r, a_h, s, th_r2] +
+                                                 self.a_vector[ns][th_r2]) * p *
+                                                inv_r_pi[ns, th_r2])
+                            q_vector_2[a_h] += np.max(q_vector2_a, axis=0)
+                            # q_vector_2[a_h, th_r2] = np.max(np.sum(q_vector2_a, axis=0))
+
+                        # for th_r2 in range(env.th_r):
+                        #     q_vector2_a = np.zeros((0, env.th_h))
+                        #     for ns, _p in env.ns[s][a_r][a_h]:
+                        #         q_vector2_a = np.concatenate([q_vector2_a,
+                        #                                       env.r[a_r, a_h, s, th_r2] +
+                        #                                       self.a_vector[ns][th_r2]])
                             #     if d == 6 and s == 0 and a_r == 0:
                             #         print(a_h, ns, th_r2, self.a_vector[ns][th_r2], self.r[a_r, a_h, s, th_r2])
                             # if d == 6 and s == 0 and a_r == 0:
                             #     print(a_h, q_vector2_a)
                             #     print(inv_r_pi[s][a_r, th_r2])
-                            q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s][a_r, th_r2], axis=0)
+                            #### q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s][a_r, th_r2], axis=0)
+                            # q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s, th_r2], axis=0)
 
-                    pi = np.apply_along_axis(prob_util._max_q_prob, 0, q_vector_2)
-                    # pi = np.apply_along_axis(prob_util._exp_q_prob, 0, q_vector_2)
+                    # pi = np.apply_along_axis(prob_util._max_q_prob, 0, q_vector_2)
+                    pi = np.apply_along_axis(prob_util._exp_q_prob, 0, q_vector_2, 0.1)
                     # if d == 6 and s == 0 and a_r == 0:
                     #     print(q_vector_2)
                     #     print(pi)
@@ -186,6 +202,33 @@ class CoopIRL(object):
                             beliefs[ns] /= np.sum(beliefs[ns])
             self.beliefs[th_r] = beliefs
 
+    def calc_h_belief(self, env, q):
+        # print(q.shape)
+        prob = np.apply_along_axis(prob_util._exp_q_prob, 0, q, 0.01)
+        self.h_belief = np.empty((env.s, env.th_r))
+        self.h_belief[:, :] = 0.5
+        # self.beliefs = {}
+        # for th_r in range(env.th_r):
+        #     beliefs = {0: np.array([0.5, 0.5])}
+        s_candi = {0}
+        while len(s_candi) > 0:
+            s = s_candi.pop()
+            for a_r in range(env.a_r):
+                for a_h in range(env.a_h):
+                    for ns in np.where(env.t[a_r, a_h, s] > 0)[0]:
+                        if ns == env.s - 1:
+                            continue
+                        # if ns in beliefs:
+                        #     print("error!", ns)
+                        #     exit()
+                        # print(s, ns)
+                        self.h_belief[ns] = self.h_belief[s] * prob[:, a_r, s]
+                        self.h_belief[ns] /= np.sum(self.h_belief[ns])
+                        s_candi.add(ns)
+            #             beliefs[ns] = beliefs[s] * self.h_pi[th_r][s][a_r][a_h]
+            #             beliefs[ns] /= np.sum(beliefs[ns])
+            # self.beliefs[th_r] = beliefs
+        # exit()
 
     def value_a(self, s, th_r, a_r, b):
         return np.max(np.dot(self.a_vector_a[s][th_r][a_r], b))
