@@ -16,12 +16,12 @@ def make_belief():
 if __name__ == '__main__':
     algo, target, main_th_r = 1, 0, 0
     # algo, target, main_th_r = 2, 1, 0
-    index = 1
+    map_index = 2
     limit = 15
     # limit = 12
     use_dump = True
-    save_dump = False
-    maze = Maze("problem/p_e/map_data/map4")
+    save_dump = True
+    maze = Maze(f"problem/p_e/map_data/map{map_index}")
     # maze.move_h(2)
     # actions = [(2, -1), (0, 0), (0, 0), (0, 0), (2, 1), (2, 1), (2, 0), (0, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1)]
     # for a in actions[1:7]:
@@ -32,7 +32,6 @@ if __name__ == '__main__':
     # exit()
 
     env = MazeMDP(maze, limit)
-    # exit()
     env.make_single_policy()
     irl = CoopIRL()
     irl.calc_h_belief(env, env.single_q)
@@ -59,13 +58,16 @@ if __name__ == '__main__':
         # env.calc_a_vector(d, beliefs, 1)
         irl.calc_a_vector(env, d, b, algo, use_dump, save_dump)
         irl.calc_belief(env)
+    env.make_scinario(f"pv_data/scinario_{map_index}.json", irl)
+    exit()
 
     # env.make_scinario(main_th_r, index, algo, target)
     # scinario = worst2.make_worst(index, 0, env)
     # pickle.dump((env.a_vector_a, env.h_pi), open("policy.pkl", "wb"))
 
     for a_r in range(env.a_r):
-        v = np.array([irl.value_a(0, 0, a_r, b[i]) for i in range(len(b))])
+        v = np.array([irl.value_a(0, 1, a_r, b[i]) for i in range(len(b))])
+        # v = np.array([irl.value(0, 1, b[i]) for i in range(len(b))])
         if np.max(v) < -900:
             continue
         # plt.plot(b[:, 0], v, label=a_r)

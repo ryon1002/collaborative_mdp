@@ -145,6 +145,9 @@ class Maze(object):
         if not done:
             self.move_enemys()
 
+    def move_only_a(self, h_action):
+        self.move_human(h_action)
+
     def move_h(self, h_action):
         done = self.move_human(h_action)
         if not done:
