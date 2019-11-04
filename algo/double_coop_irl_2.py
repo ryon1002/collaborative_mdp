@@ -92,7 +92,7 @@ class CoopIRL(object):
                                 #                               self.a_vector[ns][th_r2]* p])
                                 q_vector2_a += ((env.r[a_r, a_h, s, th_r2] +
                                                  self.a_vector[ns][th_r2]) * p *
-                                                inv_r_pi[ns, th_r2])
+                                                inv_r_pi[:, ns, th_r2])
                             q_vector_2[a_h] += np.max(q_vector2_a, axis=0)
                             # q_vector_2[a_h, th_r2] = np.max(np.sum(q_vector2_a, axis=0))
 
@@ -203,32 +203,21 @@ class CoopIRL(object):
             self.beliefs[th_r] = beliefs
 
     def calc_h_belief(self, env, q):
-        # print(q.shape)
-        prob = np.apply_along_axis(prob_util._exp_q_prob, 0, q, 0.01)
-        self.h_belief = np.empty((env.s, env.th_r))
-        self.h_belief[:, :] = 0.5
-        # self.beliefs = {}
-        # for th_r in range(env.th_r):
-        #     beliefs = {0: np.array([0.5, 0.5])}
-        s_candi = {0}
-        while len(s_candi) > 0:
-            s = s_candi.pop()
-            for a_r in range(env.a_r):
-                for a_h in range(env.a_h):
-                    for ns in np.where(env.t[a_r, a_h, s] > 0)[0]:
-                        if ns == env.s - 1:
-                            continue
-                        # if ns in beliefs:
-                        #     print("error!", ns)
-                        #     exit()
-                        # print(s, ns)
-                        self.h_belief[ns] = self.h_belief[s] * prob[:, a_r, s]
-                        self.h_belief[ns] /= np.sum(self.h_belief[ns])
-                        s_candi.add(ns)
-            #             beliefs[ns] = beliefs[s] * self.h_pi[th_r][s][a_r][a_h]
-            #             beliefs[ns] /= np.sum(beliefs[ns])
-            # self.beliefs[th_r] = beliefs
-        # exit()
+        self.h_belief = np.empty((env.th_h, env.s, env.th_r))
+        self.h_belief[:, :, :] = 0.5
+        for th_h in range(env.th_h):
+            prob = np.apply_along_axis(prob_util._exp_q_prob, 0, q[:, th_h], 0.01)
+            s_candi = {0}
+            while len(s_candi) > 0:
+                s = s_candi.pop()
+                for a_r in range(env.a_r):
+                    for a_h in range(env.a_h):
+                        for ns in np.where(env.t[a_r, a_h, s] > 0)[0]:
+                            if ns == env.s - 1:
+                                continue
+                            self.h_belief[th_h, ns] = self.h_belief[th_h, s] * prob[:, a_r, s]
+                            self.h_belief[th_h, ns] /= np.sum(self.h_belief[th_h, ns])
+                            s_candi.add(ns)
 
     def value_a(self, s, th_r, a_r, b):
         return np.max(np.dot(self.a_vector_a[s][th_r][a_r], b))

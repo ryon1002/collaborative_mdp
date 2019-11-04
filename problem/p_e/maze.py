@@ -80,25 +80,40 @@ class Node(object):
 
 
 class State(object):
-    def __init__(self, human, agent, enemys, nodes):
+    def __init__(self, human, agent, b_enemys, r_enemys):
         self.human = human
         self.prev_human = human
         self.agent = agent
         self.prev_agent = agent
-        self.enemys = list(enemys)
-        self.prev_enemys = list(enemys)
+        self.b_enemys = list(b_enemys)
+        self.prev_b_enemys = list(b_enemys)
+        self.r_enemys = list(r_enemys)
+        self.prev_r_enemys = list(r_enemys)
         self.done = -1
 
 
 class Maze(object):
     def __init__(self, file_name):
-        self.map = np.array([[int(i) for i in l.rstrip()] for l in open(file_name, "r")])
-        self.enemy_num = np.max(self.map) - 4
+        self.map = np.array([[self.conv_num(i) for i in l.rstrip()] for l in open(file_name, "r")])
+        if np.max(self.map) <= 20:
+            self.b_enemy_num = np.max(self.map) - 9
+            self.r_enemy_num = 0
+        else:
+            self.b_enemy_num = np.max(self.map[self.map < 19]) - 9
+            self.r_enemy_num = np.max(self.map) - 19
         self._make_maze_data()
+
+    def conv_num(self, char):
+        if char.isnumeric():
+            return int(char)
+        if ord(char) < ord("a"):
+            return ord(char) - ord("A") + 20
+        return ord(char) - ord("a") + 10
 
     def _make_maze_data(self):
         self.nodes = {}
-        enemys = [None] * self.enemy_num
+        b_enemys = [None] * self.b_enemy_num
+        r_enemys = [None] * self.r_enemy_num
         for yi, xi in itertools.product(range(self.map.shape[0]), range(self.map.shape[1])):
             if self.map[yi, xi] > 0:
                 self.nodes[(yi, xi)] = Node(yi, xi)
@@ -106,15 +121,17 @@ class Maze(object):
                 human = (yi, xi)
             if self.map[yi, xi] == 3:
                 agent = (yi, xi)
-            if self.map[yi, xi] >= 5:
-                enemys[self.map[yi, xi] - 5] = (yi, xi)
+            if 20 > self.map[yi, xi] >= 10:
+                b_enemys[self.map[yi, xi] - 10] = (yi, xi)
+            if self.map[yi, xi] >= 20:
+                r_enemys[self.map[yi, xi] - 20] = (yi, xi)
         for node in self.nodes.values():
             node.add_nexts(self.nodes)
         for node in self.nodes.values():
             node.add_to_next_ts()
         for node in self.nodes.values():
             node.add_to_all_t(self.nodes)
-        self.state = State(human, agent, enemys, self.nodes)
+        self.state = State(human, agent, b_enemys, r_enemys)
 
     def move_ha(self, h_action, a_action):
         done = self.move_human(h_action)
@@ -136,20 +153,27 @@ class Maze(object):
     def move_human(self, h_action):
         self.state.prev_human = self.state.human
         self.state.human = self.nodes[self.state.human].nexts[h_action].pos
-        if self.state.human in self.state.enemys:
-            self.state.done = self.state.enemys.index(self.state.human)
+        if self.state.human in self.state.b_enemys:
+            self.state.done = self.state.b_enemys.index(self.state.human)
+            return True
+        if self.state.human in self.state.r_enemys:
+            self.state.done = self.state.r_enemys.index(self.state.human) + 10
             return True
         return False
 
     def move_enemys(self):
-        for ei in range(len(self.state.enemys)):
-            self.state.enemys[ei] = self._escape(ei, self.state.enemys[ei])
-            self.state.prev_enemys[ei] = self.state.enemys[ei]
+        for ei in range(len(self.state.b_enemys)):
+            self.state.b_enemys[ei] = self._escape(ei, self.state.b_enemys[ei])
+            self.state.prev_b_enemys[ei] = self.state.b_enemys[ei]
+        for ei in range(len(self.state.r_enemys)):
+            self.state.r_enemys[ei] = self._escape(ei, self.state.r_enemys[ei])
+            self.state.prev_r_enemys[ei] = self.state.r_enemys[ei]
 
     def move_agent(self, a_action):
         self.state.prev_agent = self.state.agent
         next_agent = self.nodes[self.state.agent].nexts[a_action].pos
-        if next_agent not in self.state.enemys and next_agent != self.state.human:
+        if (next_agent not in self.state.r_enemys and next_agent not in self.state.b_enemys) and\
+                next_agent != self.state.human:
             self.state.agent = next_agent
 
     def _escape(self, ei, pos):
@@ -164,7 +188,7 @@ class Maze(object):
             return pos
         for _, a in a_list:
             nn = node.nexts[a]
-            if not nn.pos in self.state.enemys and \
+            if not nn.pos in self.state.r_enemys and not nn.pos in self.state.b_enemys and\
                     nn.pos != self.state.agent and nn.pos != self.state.human:
                 return nn.pos
         return pos
@@ -198,7 +222,10 @@ class Maze(object):
         for yi, xi in itertools.product(range(self.map.shape[0]), range(self.map.shape[1])):
             color = "w" if self.map[yi, xi] > 0 else "brown"
             plt.gca().add_patch(patches.Rectangle((xi, -yi), 1, -1, facecolor=color))
-        for e in self.state.enemys:
+        for e in self.state.r_enemys:
+            plt.gca().add_patch(patches.Rectangle(e[::-1] * np.array([1, -1]), 1, -1,
+                                                  facecolor="pink"))
+        for e in self.state.b_enemys:
             plt.gca().add_patch(patches.Rectangle(e[::-1] * np.array([1, -1]), 1, -1,
                                                   facecolor="lightblue"))
         plt.gca().add_patch(patches.Rectangle(self.state.human[::-1] * np.array([1, -1]), 1, -1,

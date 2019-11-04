@@ -18,13 +18,14 @@ class MazeMDP(CoopIRLMDP):
                 self.s_map.pop(self.s_count)
                 self.s_count -= 1
             self.s_count += 1
-        super().__init__(len(self.s_map) + 1, 4, 4, maze.enemy_num, 1)
+        th_h = 2 if maze.r_enemy_num > 0 else 1
+        super().__init__(len(self.s_map) + 1, 4, 4, maze.b_enemy_num, th_h)
 
     def search_state(self, maze, s, d, last_actions):
         if d == 0 or maze.state.done != -1:
             if maze.state.done != -1:
                 print(maze.state.done, d)
-                # print(last_actions)
+                print(last_actions)
                 # maze.show_world()
             return True, maze.state.done
         state = copy.deepcopy(maze.state)
@@ -63,27 +64,48 @@ class MazeMDP(CoopIRLMDP):
                     else:
                         self.t[a_r, a_h, s, -1] = 1
                         if done != -1:
-                            self.r[a_r, a_h, s, done, :] = 100
+                            self.r[a_r, a_h, s, done % 10, done // 10] = 100
                 else:
                     self.t[a_r, a_h, s, -1] = 1
                     self.r[a_r, a_h, s, :, :] = -1000
 
+    # def make_single_policy(self):
+    #     self.single_t = np.zeros((self.a_r * self.a_h, self.s, self.s))
+    #     self.single_r = np.zeros((self.th_r * self.th_h, self.a_r * self.a_h, self.s, self.s))
+    #     for a_r in range(self.a_r):
+    #         for a_h in range(self.a_h):
+    #             self.single_t[self.a_h * a_r + a_h] = self.t[a_r, a_h]
+    #             for th_r in range(self.th_r):
+    #                 for th_h in range(self.th_h):
+    #                     for s in range(self.s):
+    #                         self.single_r[self.th_h * th_r + th_h, self.a_h * a_r + a_h, s, :]\
+    #                             = self.r[a_r, a_h, s, th_r, th_h]
+    #
+    #
+    #     self.single_q = np.zeros((self.single_r.shape[0], self.a_r, self.s))
+    #     for r in range(self.single_r.shape[0]):
+    #         q = do_value_iteration(self.single_t, self.single_r[r])
+    #         for a_r in range(self.a_r):
+    #             self.single_q[r, a_r] = np.max(q[a_r * self.a_h:(a_r + 1) * self.a_h], axis=0)
+    #     # print("test")
+
     def make_single_policy(self):
         self.single_t = np.zeros((self.a_r * self.a_h, self.s, self.s))
-        self.single_r = np.zeros((self.th_r * self.th_h, self.a_r * self.a_h, self.s, self.s))
+        self.single_r = np.zeros((self.th_r, self.th_h, self.a_r * self.a_h, self.s, self.s))
         for a_r in range(self.a_r):
             for a_h in range(self.a_h):
                 self.single_t[self.a_h * a_r + a_h] = self.t[a_r, a_h]
                 for th_r in range(self.th_r):
                     for th_h in range(self.th_h):
                         for s in range(self.s):
-                            self.single_r[self.th_h * th_r + th_h, self.a_h * a_r + a_h, s, :]\
+                            self.single_r[th_r, th_h, self.a_h * a_r + a_h, s, :] \
                                 = self.r[a_r, a_h, s, th_r, th_h]
 
 
-        self.single_q = np.zeros((self.single_r.shape[0], self.a_r, self.s))
-        for r in range(self.single_r.shape[0]):
-            q = do_value_iteration(self.single_t, self.single_r[r])
-            for a_r in range(self.a_r):
-                self.single_q[r, a_r] = np.max(q[a_r * self.a_h:(a_r + 1) * self.a_h], axis=0)
+        self.single_q = np.zeros((self.th_r, self.th_h, self.a_r, self.s))
+        for th_r in range(self.th_r):
+            for th_h in range(self.th_h):
+                q = do_value_iteration(self.single_t, self.single_r[th_r, th_h])
+                for a_r in range(self.a_r):
+                    self.single_q[th_r, th_h, a_r] = np.max(q[a_r * self.a_h:(a_r + 1) * self.a_h], axis=0)
         # print("test")

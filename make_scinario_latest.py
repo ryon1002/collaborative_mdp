@@ -21,19 +21,18 @@ if __name__ == '__main__':
     # limit = 12
     use_dump = True
     save_dump = False
-    maze = Maze("problem/p_e/map_data/map2")
-    # maze.move_h(0)
-    # # actions = [(0, 2)] * 2 + [(2, 0)] * 3 #+ [(2, 1)] * 0 #+ [(2, 3)] * 1
-    # # actions = [(0, 2)] * 2 + [(2, 0)] * 3 + [(2, 1)] * 2 + [(2, 3)] * 4
-    # actions = [(0, 0), (2, 0)]# + [(2, 1)] * 6 + [(3, 1)] * 4
-    # actions = [(0, 0)] + [(2, 0)] * 3 + [(2, 2)] * 2 + [(2, 3)] * 4 + [(2, 1)]# + [(2, 1)] * 8 + [(0, 1)] * 2 + [(2, 1)] + [(2, 3)]
-    # actions = [(0, 0), (0, 0), (0, 0), (2, 0), (2, 2), (2, 2), (2, 3), (2, 3), (2, 3), (2, 3), (2, 1), (2, 1), (2, 0), (2, 0), (3, 0), (3, 0), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-    # for a in actions:
+    maze = Maze("problem/p_e/map_data/map4")
+    # maze.move_h(2)
+    # actions = [(2, -1), (0, 0), (0, 0), (0, 0), (2, 1), (2, 1), (2, 0), (0, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1)]
+    # for a in actions[1:7]:
     #     maze.move_ah(*a)
+    # maze.show_world()
+    # maze.move_ah(2, 1)
     # maze.show_world()
     # exit()
 
     env = MazeMDP(maze, limit)
+    # exit()
     env.make_single_policy()
     irl = CoopIRL()
     irl.calc_h_belief(env, env.single_q)
