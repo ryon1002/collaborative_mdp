@@ -18,7 +18,7 @@ class MazeMDP(CoopIRLMDP):
             maze.state = copy.deepcopy(init_state)
             maze.move_h(a_h)
             history = ((maze.state.prev_human, maze.state.human),(maze.state.agent,))
-            self.search_state(maze, 0, d, (), [(a_h, -1)], history)
+            self.search_state(maze, len(self.s_map), d, (), [(a_h, -1)], history)
         th_h = 2 if maze.r_enemy_num > 0 else 1
         super().__init__(len(self.s_map) + 1, 4, 4, maze.b_enemy_num, th_h)
         maze.state = init_state
@@ -27,10 +27,12 @@ class MazeMDP(CoopIRLMDP):
         a_list = []
         for a in maze.possible_action():
             n_h = tuple(np.array(maze.state.human) + a_dir[a[0]])
-            if n_h in history[0]:
+            if n_h in history[0] or n_h == maze.state.agent:
                 continue
             n_a = tuple(np.array(maze.state.agent) + a_dir[a[1]])
             if n_a in history[1]:
+                    # or n_a == maze.state.human or\
+                    # n_a in maze.state.b_enemys or n_a in maze.state.r_enemys:
                 continue
             a_list.append(a)
         return a_list
@@ -62,6 +64,7 @@ class MazeMDP(CoopIRLMDP):
                                                         next_history)
             return end, end_s, done, all_a
         else:
+            # maze.show_world()
             state = copy.deepcopy(maze.state)
             self.s_map[s] = {}
             end_s = s + 1
@@ -173,6 +176,7 @@ class MazeMDP(CoopIRLMDP):
                 if in_a_i == len(in_a_list) - 2 and ns == self.s - 1:
                     self.maze.move_only_a(in_a[0])
                 else:
+                    print(s, in_a)
                     self.maze.move_ah(in_a[0], in_a[1])
                 pos[len(pos)] = self._s_data(self.maze.state)
                 if prev_pos_s not in t:

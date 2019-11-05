@@ -163,6 +163,8 @@ class Maze(object):
         if self.state.human in self.state.r_enemys:
             self.state.done = self.state.r_enemys.index(self.state.human) + 10
             return True
+        # if self.state.human == self.state.agent:
+        #     self.state.human == self.state.prev_human
         return False
 
     def move_enemys(self):
@@ -184,7 +186,6 @@ class Maze(object):
         node = self.nodes[pos]
         a_list = sorted([(self._min_dist(n, node, d, mid_n), a) for a, d, mid_n, n in node.to_next_t],
                         reverse=True)
-        print(ei, a_list)
         if a_list[0][0] < 1 and len(node.to_next_s) > 0:
             for a, _, _, _ in node.to_next_s:
                 return node.nexts[a].pos

@@ -26,7 +26,7 @@ class CoopIRL(object):
                     # self.beliefs[th_r][s] = np.array([0.5, 0.5])
             return
         if use_dump and os.path.exists(f"store/{d}.pkl"):
-            self.a_vector, self.a_vector_a, self.beliefs, self.h_pi =\
+            self.a_vector, self.a_vector_a, self.beliefs, self.h_pi = \
                 pickle.load(open(f"store/{d}.pkl", "rb"))
             return
         else:
@@ -51,35 +51,39 @@ class CoopIRL(object):
         #             # r_val[a_r, th_r] = np.mean(tmp_th_h_val)
         #             belief = self.beliefs[th_r][s] if s in self.beliefs[th_r] else self.default_belief
         #             r_val[a_r, th_r] = np.dot(tmp_th_h_val, belief)
-            # if algo == 1:
-            #     r_pi = np.apply_along_axis(prob_util._exp_q_prob, 0, r_val / 10)  # full bayes
-            #     # r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
-            #     # inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
-            #     inv_r_pi[s] = np.apply_along_axis(prob_util._exp_q_prob, 1, r_pi)
-                # if d == 6 and s == 0:
-                #     print(r_pi)
-                #     print(r_val)
-                #     print(inv_r_pi[0])
-                #     exit()
-            # elif algo == 0:
-            #     r_pi = np.apply_along_axis(prob_util._max_q_prob, 1, r_val) # bias
-            #     inv_r_pi[s] = np.apply_along_axis(prob_util._max_q_prob, 1, r_pi)
-                # if d == 6 and s == 0:
-                #     print(r_pi)
-                #     print(r_val)
-                #     print(inv_r_pi[0])
-                #     exit()
+        # if algo == 1:
+        #     r_pi = np.apply_along_axis(prob_util._exp_q_prob, 0, r_val / 10)  # full bayes
+        #     # r_pi = np.apply_along_axis(self._max_q_prob, 0, r_val)  # full bayes
+        #     # inv_r_pi[s] = np.apply_along_axis(self._max_q_prob, 1, r_pi)
+        #     inv_r_pi[s] = np.apply_along_axis(prob_util._exp_q_prob, 1, r_pi)
+        # if d == 6 and s == 0:
+        #     print(r_pi)
+        #     print(r_val)
+        #     print(inv_r_pi[0])
+        #     exit()
+        # elif algo == 0:
+        #     r_pi = np.apply_along_axis(prob_util._max_q_prob, 1, r_val) # bias
+        #     inv_r_pi[s] = np.apply_along_axis(prob_util._max_q_prob, 1, r_pi)
+        # if d == 6 and s == 0:
+        #     print(r_pi)
+        #     print(r_val)
+        #     print(inv_r_pi[0])
+        #     exit()
         # print(inv_r_pi.shape())
-        inv_r_pi = self.h_belief.copy()
+        if algo == 1:
+            inv_r_pi = self.h_belief.copy()
         # print(inv_r_pi.shape)
         # exit()
         self.h_pi = {}
         for th_r in range(env.th_r):
+            if algo == 2:
+                inv_r_pi = np.zeros((env.th_h, env.s, env.th_r))
+                inv_r_pi[:, :, th_r] = 1
             self.h_pi[th_r] = {}
             for s in range(env.s):
-                if algo == 2:
-                    inv_r_pi[s] = np.zeros((env.a_r, env.th_r))
-                    inv_r_pi[s][:, th_r] = 1
+                # if algo == 2:
+                #     inv_r_pi[s] = np.zeros((env.a_r, env.th_r))
+                #     inv_r_pi[s][:, th_r] = 1
                 self.h_pi[th_r][s] = {}
                 for a_r in range(env.a_r):
                     q_vector_2 = np.zeros((env.a_h, env.th_h))
@@ -102,13 +106,13 @@ class CoopIRL(object):
                         #         q_vector2_a = np.concatenate([q_vector2_a,
                         #                                       env.r[a_r, a_h, s, th_r2] +
                         #                                       self.a_vector[ns][th_r2]])
-                            #     if d == 6 and s == 0 and a_r == 0:
-                            #         print(a_h, ns, th_r2, self.a_vector[ns][th_r2], self.r[a_r, a_h, s, th_r2])
-                            # if d == 6 and s == 0 and a_r == 0:
-                            #     print(a_h, q_vector2_a)
-                            #     print(inv_r_pi[s][a_r, th_r2])
-                            #### q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s][a_r, th_r2], axis=0)
-                            # q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s, th_r2], axis=0)
+                        #     if d == 6 and s == 0 and a_r == 0:
+                        #         print(a_h, ns, th_r2, self.a_vector[ns][th_r2], self.r[a_r, a_h, s, th_r2])
+                        # if d == 6 and s == 0 and a_r == 0:
+                        #     print(a_h, q_vector2_a)
+                        #     print(inv_r_pi[s][a_r, th_r2])
+                        #### q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s][a_r, th_r2], axis=0)
+                        # q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s, th_r2], axis=0)
 
                     # pi = np.apply_along_axis(prob_util._max_q_prob, 0, q_vector_2)
                     pi = np.apply_along_axis(prob_util._exp_q_prob, 0, q_vector_2, 0.1)
@@ -160,7 +164,6 @@ class CoopIRL(object):
         if save_dump:
             pickle.dump((self.a_vector, self.a_vector_a, self.beliefs, self.h_pi),
                         open(f"store/{d}.pkl", "wb"))
-
 
         print(d)
         # if d == 7:
