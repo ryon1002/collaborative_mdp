@@ -62,7 +62,8 @@ class Node(object):
         #             heapq.heappush(q, (v + d, nn))
         #         for _, d, _, nn in n.to_next_s:
         #             heapq.heappush(q, (v + d, nn))
-        q = [(1, n.pos) for n in self.nexts.values()]
+        # q = [(1, n.pos) for n in self.nexts.values()]
+        q = [(0, self.pos)]
         heapq.heapify(q)
         while len(q) > 0:
             v, n = heapq.heappop(q)
@@ -166,11 +167,11 @@ class Maze(object):
 
     def move_enemys(self):
         for ei in range(len(self.state.b_enemys)):
-            self.state.b_enemys[ei] = self._escape(ei, self.state.b_enemys[ei])
             self.state.prev_b_enemys[ei] = self.state.b_enemys[ei]
+            self.state.b_enemys[ei] = self._escape(ei, self.state.b_enemys[ei])
         for ei in range(len(self.state.r_enemys)):
-            self.state.r_enemys[ei] = self._escape(ei, self.state.r_enemys[ei])
             self.state.prev_r_enemys[ei] = self.state.r_enemys[ei]
+            self.state.r_enemys[ei] = self._escape(ei, self.state.r_enemys[ei])
 
     def move_agent(self, a_action):
         self.state.prev_agent = self.state.agent
@@ -181,9 +182,9 @@ class Maze(object):
 
     def _escape(self, ei, pos):
         node = self.nodes[pos]
-        a_list = sorted([(self._min_dist(n, d, mid_n), a) for a, d, mid_n, n in node.to_next_t],
+        a_list = sorted([(self._min_dist(n, node, d, mid_n), a) for a, d, mid_n, n in node.to_next_t],
                         reverse=True)
-        # print(a_list)
+        print(ei, a_list)
         if a_list[0][0] < 1 and len(node.to_next_s) > 0:
             for a, _, _, _ in node.to_next_s:
                 return node.nexts[a].pos
@@ -196,22 +197,30 @@ class Maze(object):
                 return nn.pos
         return pos
 
-    def _min_dist(self, node, dist, mid_node):
+    def _min_dist(self, node, enemy_node, dist, mid_node):
         human, agent = self.nodes[self.state.human], self.nodes[self.state.agent]
         if self.state.human in mid_node:
+            if enemy_node.to_all_node[self.state.prev_human] < \
+                    enemy_node.to_all_node[self.state.human]:
+                return 1000
             # if self.state.prev_human in mid_node:
             #     if self.nodes[self.state.prev_human].to_all_node[node.pos] >\
             #             self.nodes[self.state.human].to_all_node[node.pos]:
-            if human.to_all_node[node.pos] < self.nodes[self.state.human].to_all_node[node.pos]:
-                return 1000
-            return -1000 + dist - human.to_all_node[node.pos] - 0.1
+            # if self.state.prev_human in mid_node:
+            #     if human.to_all_node[node.pos] < self.nodes[self.state.prev_human].to_all_node[node.pos]:
+            #         return 1000
+            return -1000 + enemy_node.to_all_node[self.state.human] - 0.1
         if self.state.agent in mid_node:
+            if enemy_node.to_all_node[self.state.prev_agent] < \
+                    enemy_node.to_all_node[self.state.agent]:
+                return 1000
             # if self.state.prev_agent in mid_node:
             #     if self.nodes[self.state.prev_agent].to_all_node[node.pos] > \
             #             self.nodes[self.state.agent].to_all_node[node.pos]:
-            if agent.to_all_node[node.pos] < self.nodes[self.state.agent].to_all_node[node.pos]:
-                return 1000
-            return -1000 + dist - agent.to_all_node[node.pos]
+            # if self.state.prev_agent in mid_node:
+            #     if agent.to_all_node[node.pos] < self.nodes[self.state.prev_agent].to_all_node[node.pos]:
+            #         return 1000
+            return -1000 + enemy_node.to_all_node[self.state.agent] - 0.1
         if human.to_all_node[node.pos] <= 1:
             return -1000 + dist - human.to_all_node[node.pos] - 0.1
         return min(human.to_all_node[node.pos], agent.to_all_node[node.pos])

@@ -16,18 +16,23 @@ def make_belief():
 if __name__ == '__main__':
     algo, target, main_th_r = 1, 0, 0
     # algo, target, main_th_r = 2, 1, 0
-    map_index = 2
-    limit = 15
+    map_index = 6
+    # limit = 15
+    limit = 20
+    s_limit = 6
     # limit = 12
-    use_dump = True
+    use_dump = False
     save_dump = False
     maze = Maze(f"problem/p_e/map_data/map{map_index}")
-    # maze.move_h(2)
-    # actions = [(2, -1), (0, 0), (0, 0), (0, 0), (2, 1), (2, 1), (2, 0), (0, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1)]
-    # for a in actions[1:7]:
-    #     maze.move_ah(*a)
+    # actions = [(0, -1), (1, 0), (1, 0), (3, 1), (3, 0), (3, 0), (3, 0), (3, 0), (3, 0), (3, 0), (3, 0), (3, 0)]
+    # actions = [(0, -1), (0, 2), (0, 2), (0, 0), (2, 0), (2, 0), (2, 0), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1)]
+    # check_limit = 10
+    # for ai in range(check_limit):
+    #     maze.move_ah(actions[ai][0], actions[ai + 1][1])
     # maze.show_world()
-    # maze.move_ah(2, 1)
+    # maze.move_ah(actions[check_limit][0], actions[check_limit + 1][1])
+    # maze.show_world()
+    # exit()
     # maze.show_world()
     # exit()
 
@@ -55,7 +60,7 @@ if __name__ == '__main__':
     #             beliefs[th_r][s] = np.array([0.5, 0.5])
     # else:
     #     beliefs = env.calc_belief()
-    for d in [limit]:
+    for d in [s_limit]:
         # env.calc_a_vector(d, beliefs, 1)
         irl.calc_a_vector(env, d, b, algo, use_dump, save_dump)
         irl.calc_belief(env)
