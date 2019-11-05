@@ -16,59 +16,62 @@ class MazeMDP(CoopIRLMDP):
         for a_h in h_actions:
             maze.state = copy.deepcopy(init_state)
             maze.move_h(a_h)
-            self.search_state(maze, self.s_count, d, [(a_h, -1)])
-            if len(self.s_map[self.s_count]) == 0:
-                self.s_map.pop(self.s_count)
-                self.s_count -= 1
-            self.s_count += 1
+            self.search_state(maze, 0, d, (), [(a_h, -1)])
         th_h = 2 if maze.r_enemy_num > 0 else 1
         super().__init__(len(self.s_map) + 1, 4, 4, maze.b_enemy_num, th_h)
         maze.state = init_state
 
-    def search_state(self, maze, s, d, last_actions):
+    def search_state(self, maze, s, d, last_a, last_actions):
         if d == 0 or maze.state.done != -1:
             if maze.state.done != -1:
                 print(maze.state.done, d)
                 print(last_actions)
                 # maze.show_world()
-            return True, maze.state.done
-        state = copy.deepcopy(maze.state)
-        self.s_map[s] = {}
-        # a_stopped = True if last_action is not None and last_action[1] == 4 else False
-        for a in maze.possible_action():
-            if self.is_inv_action(last_actions[-1][0], a[0]) or \
-                    self.is_inv_action(last_actions[-1][1], a[1]):
-                continue
-            maze.state = copy.deepcopy(state)
+            return None, s, maze.state.done, last_a
+        a_list = [a for a in maze.possible_action()
+                  if not self.is_inv_action(last_actions[-1][0], a[0]) and
+                  not self.is_inv_action(last_actions[-1][1], a[1])]
+        if len(a_list) == 0:
+            return None, s, -1, last_a
+        elif len(a_list) == 1:
+            a = a_list[0]
             maze.move_ah(*a)
-            self.s_count += 1
-            self.s_map[s][a] = (self.s_count, -1)
-            end, done = self.search_state(maze, self.s_count, d - 1, last_actions + [a])
-            if end:
-                self.s_count -= 1
-                self.s_map[s][a] = (None, done)
-        if len(self.s_map[s]) == 0:
-            return True, maze.state.done
-        return False, -1
+            all_a = last_a + (a,)
+            end, end_s, done, all_a = self.search_state(maze, s, d - 1, all_a, last_actions + [a])
+            return end, end_s, done, all_a
+        else:
+            state = copy.deepcopy(maze.state)
+            self.s_map[s] = {}
+            end_s = s + 1
+            for a in a_list:
+                maze.state = copy.deepcopy(state)
+                maze.move_ah(*a)
+                end, end_s, done, all_a = self.search_state(maze, end_s, d - 1, (a,),
+                                                            last_actions + [a])
+                self.s_map[s][all_a] = (end, done)
+        return s, end_s, -1, last_a
 
     def is_inv_action(self, a1, a2):
         return a1 + a2 == 3
 
     def _set_tro(self):
         self.t[:, :, -1, -1] = 1
-        self.r[:, :, :, :, :] = -1
+        # self.r[:, :, :, :, :] = 0
         self.r[:, :, -1, :, :] = 0
         for s, nexts in self.s_map.items():
+            nexts_f = {k[0]: (v, len(k)) for k, v in nexts.items()}
             for a_h, a_r in itertools.product(range(4), range(4)):
-                if (a_h, a_r) in nexts:
-                    n_s, done = nexts[(a_h, a_r)]
+                if (a_h, a_r) in nexts_f:
+                    (n_s, done), l = nexts_f[(a_h, a_r)]
                     if n_s is not None:
                         self.t[a_r, a_h, s, n_s] = 1
+                        self.r[a_r, a_h, s, :, :] = -l
                         # self.r = np.zeros((self.a_r, self.a_h, self.s, self.th_r, self.th_h))
                     else:
                         self.t[a_r, a_h, s, -1] = 1
+                        self.r[a_r, a_h, s, :, :] = -l
                         if done != -1:
-                            self.r[a_r, a_h, s, done % 10, done // 10] = 100
+                            self.r[a_r, a_h, s, done % 10, done // 10] += 100
                 else:
                     self.t[a_r, a_h, s, -1] = 1
                     self.r[a_r, a_h, s, :, :] = -1000
@@ -148,52 +151,23 @@ class MazeMDP(CoopIRLMDP):
             v = np.array([[irl.value_a(ns, th_r, a_r, b) for a_r in range(self.a_r)]
                           for th_r in range(self.th_r)])
             n_a_r = np.argmax(np.max(v, axis=0))
-            if ns == self.s - 1:
-                self.maze.move_only_a(a_h)
+            for in_a_list in self.s_map[s].keys():
+                if in_a_list[0] == (a_h, n_a_r):
+                    break
             else:
-                self.maze.move_ah(a_h, n_a_r)
-            pos[len(pos)] = self._s_data(self.maze.state)
-            t[pos_s][a_h] = len(pos) - 1
+                print("error")
+                exit()
+            for in_a in in_a_list:
+                if ns == self.s - 1:
+                    self.maze.move_only_a(in_a[0])
+                else:
+                    self.maze.move_ah(in_a[0], in_a[1])
+                pos[len(pos)] = self._s_data(self.maze.state)
+                t[pos_s][a_h] = len(pos) - 1
             if ns != self.s - 1:
                 a_h_list_2 = set()
                 for a in self.s_map[ns].keys():
-                    if a[1] == n_a_r:
-                        a_h_list_2.add(a[0])
+                    if a[0][1] == n_a_r:
+                        a_h_list_2.add(a[0][0])
                 self.search_state_for_scinario(ns, len(pos) - 1, list(a_h_list_2),
                                                n_a_r, pos, t, irl, d - 1)
-
-            # print(n_a_r)
-            # exit()
-            #
-            # ns
-
-            # v = np.array([irl.value_a(0, 1, a_r, b[i]) for i in range(len(b))])
-
-            # irl.a_vector_a[s]
-            # print(a_h)
-        # exit()
-        # print(self.t)
-        # if d == 0 or maze.state.done != -1:
-        #     if maze.state.done != -1:
-        #         print(maze.state.done, d)
-        #         print(last_actions)
-        #         # maze.show_world()
-        #     return True, maze.state.done
-        # state = copy.deepcopy(maze.state)
-        # self.s_map[s] = {}
-        # # a_stopped = True if last_action is not None and last_action[1] == 4 else False
-        # for a in maze.possible_action():
-        #     if self.is_inv_action(last_actions[-1][0], a[0]) or \
-        #             self.is_inv_action(last_actions[-1][1], a[1]):
-        #         continue
-        #     maze.state = copy.deepcopy(state)
-        #     maze.move_ah(*a)
-        #     self.s_count += 1
-        #     self.s_map[s][a] = (self.s_count, -1)
-        #     end, done = self.search_state(maze, self.s_count, d - 1, last_actions + [a])
-        #     if end:
-        #         self.s_count -= 1
-        #         self.s_map[s][a] = (None, done)
-        # if len(self.s_map[s]) == 0:
-        #     return True, maze.state.done
-        # return False, -1
