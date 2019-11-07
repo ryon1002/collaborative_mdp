@@ -12,6 +12,10 @@ class CoopIRL(object):
         self.default_belief = np.array([1.0])
 
     def calc_a_vector(self, env, d, bs=None, algo=1, use_dump=False, save_dump=False):
+        if env.th_h == 2:
+            self.default_belief = np.array([0.5, 0.5])
+        elif env.th_h == 1:
+            self.default_belief = np.array([1.0])
         if d == 1:
             self.a_vector = {}
             for s in range(env.s):
@@ -89,15 +93,18 @@ class CoopIRL(object):
                     q_vector_2 = np.zeros((env.a_h, env.th_h))
                     for a_h in range(env.a_h):
                         for th_r2 in range(env.th_r):
-                            q_vector2_a = np.zeros((1, env.th_h))
+                            q_vector2_a = np.zeros((0, env.th_h))
                             for ns, p in env.ns[s][a_r][a_h]:
-                                # q_vector2_a = np.concatenate([q_vector2_a,
-                                #                               env.r[a_r, a_h, s, th_r2] * p +
-                                #                               self.a_vector[ns][th_r2]* p])
-                                q_vector2_a += ((env.r[a_r, a_h, s, th_r2] +
-                                                 self.a_vector[ns][th_r2]) * p *
-                                                inv_r_pi[:, ns, th_r2])
-                            q_vector_2[a_h] += np.max(q_vector2_a, axis=0)
+                                q_vector2_a = np.concatenate([q_vector2_a,
+                                                              env.r[a_r, a_h, s, th_r2] * p +
+                                                              self.a_vector[ns][th_r2] * p *
+                                                              inv_r_pi[:, ns, th_r2]])
+                                # q_vector2_a += ((env.r[a_r, a_h, s, th_r2] +
+                                #                  self.a_vector[ns][th_r2]) * p *
+                                #                 inv_r_pi[:, ns, th_r2])
+                                # q_vector2_a += ((self.a_vector[ns][th_r2]) * p *
+                                #                 inv_r_pi[:, ns, th_r2])
+                            q_vector_2[a_h] += np.max(q_vector2_a, axis=0)# +env.r[a_r, a_h, s, th_r2]
                             # q_vector_2[a_h, th_r2] = np.max(np.sum(q_vector2_a, axis=0))
 
                         # for th_r2 in range(env.th_r):
@@ -114,13 +121,19 @@ class CoopIRL(object):
                         #### q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s][a_r, th_r2], axis=0)
                         # q_vector_2[a_h] += np.max(q_vector2_a * inv_r_pi[s, th_r2], axis=0)
 
-                    # pi = np.apply_along_axis(prob_util._max_q_prob, 0, q_vector_2)
-                    pi = np.apply_along_axis(prob_util._exp_q_prob, 0, q_vector_2, 0.1)
+                    # if env.th == 2:
+                    #     pass
+                    # else:
+                    pi = np.apply_along_axis(prob_util._max_q_prob, 1, q_vector_2)
+                    pi = np.apply_along_axis(prob_util._max_q_prob, 0, pi)
+                    # pi = np.apply_along_axis(prob_util._exp_q_prob, 0, q_vector_2, 0.1)
                     # if d == 6 and s == 0 and a_r == 0:
                     #     print(q_vector_2)
                     #     print(pi)
                     #     exit()
-                    self.h_pi[th_r][s][a_r] = np.apply_along_axis(prob_util._exp_q_prob, 1, pi)
+
+                    #### self.h_pi[th_r][s][a_r] = np.apply_along_axis(prob_util._exp_q_prob, 1, pi, 0.1)
+
                     # self.h_pi[th_r][s][a_r] = np.apply_along_axis(self._exp_q_prob, 1,
                     #                                               q_vector_2 / 1000)
                     # if d == 6 and s == 53 and a_r == 0:
@@ -186,30 +199,30 @@ class CoopIRL(object):
         #     exit()
         # self.calc_belief()
 
-    def calc_belief(self, env):
-        self.beliefs = {}
-        for th_r in range(env.th_r):
-            beliefs = {0: np.array([0.5, 0.5])}
-            s_candi = {0}
-            while len(s_candi) > 0:
-                s = s_candi.pop()
-                for a_r in range(env.a_r):
-                    for a_h in range(env.a_h):
-                        for ns in np.where(env.t[a_r, a_h, s] > 0)[0]:
-                            if ns == env.s - 1:
-                                continue
-                            if ns in beliefs:
-                                print("error!", ns)
-                                exit()
-                            beliefs[ns] = beliefs[s] * self.h_pi[th_r][s][a_r][a_h]
-                            beliefs[ns] /= np.sum(beliefs[ns])
-            self.beliefs[th_r] = beliefs
+    # def calc_belief(self, env):
+    #     self.beliefs = {}
+    #     for th_r in range(env.th_r):
+    #         beliefs = {0: np.array([0.5, 0.5])}
+    #         s_candi = {0}
+    #         while len(s_candi) > 0:
+    #             s = s_candi.pop()
+    #             for a_r in range(env.a_r):
+    #                 for a_h in range(env.a_h):
+    #                     for ns in np.where(env.t[a_r, a_h, s] > 0)[0]:
+    #                         if ns == env.s - 1:
+    #                             continue
+    #                         if ns in beliefs:
+    #                             print("error!", ns)
+    #                             exit()
+    #                         beliefs[ns] = beliefs[s] * self.h_pi[th_r][s][a_r][a_h]
+    #                         beliefs[ns] /= np.sum(beliefs[ns])
+    #         self.beliefs[th_r] = beliefs
 
-    def calc_h_belief(self, env, q):
+    def calc_h_belief(self, env, q, beta=1):
         self.h_belief = np.empty((env.th_h, env.s, env.th_r))
         self.h_belief[:, :, :] = 0.5
         for th_h in range(env.th_h):
-            prob = np.apply_along_axis(prob_util._exp_q_prob, 0, q[:, th_h], 0.01)
+            prob = np.apply_along_axis(prob_util._exp_q_prob, 0, q[:, th_h], beta)
             s_candi = {0}
             while len(s_candi) > 0:
                 s = s_candi.pop()

@@ -6,11 +6,13 @@ import heapq
 
 # a_map = {0: "^", 1: "<", 2: ">", 3: "v"}
 a_dir = {0: np.array([-1, 0]), 1: np.array([0, -1]), 2: np.array([0, 1]), 3: np.array([1, 0])}
+i_a_dir = {(-1, 0): 0, (0, -1): 1, (0, 1): 2, (1, 0): 3}
 
 
 class Node(object):
-    def __init__(self, yi, xi):
+    def __init__(self, yi, xi, map_value):
         self.pos = (yi, xi)
+        self.agent_forbid_down = (map_value == 5)
 
     def add_nexts(self, nodes):
         self.nexts = {}
@@ -18,7 +20,7 @@ class Node(object):
             t = tuple(np.array(self.pos) + d)
             if t in nodes:
                 self.nexts[a] = nodes[t]
-        self.is_t = len(self.nexts) == 3
+        self.is_t = len(self.nexts) >= 3
         self.is_s = len(self.nexts) == 1
 
     def add_to_next_ts(self):
@@ -51,6 +53,7 @@ class Node(object):
             self.to_all_t = {self.pos: 0}
         else:
             self.to_all_t = {}
+
         # q = [(d, n) for _, d, _, n in self.to_next_t] + [(d, n) for _, d, _, n in self.to_next_s]
         # heapq.heapify(q)
         # while len(q) > 0:
@@ -63,6 +66,7 @@ class Node(object):
         #         for _, d, _, nn in n.to_next_s:
         #             heapq.heappush(q, (v + d, nn))
         # q = [(1, n.pos) for n in self.nexts.values()]
+
         q = [(0, self.pos)]
         heapq.heapify(q)
         while len(q) > 0:
@@ -72,7 +76,6 @@ class Node(object):
                 self.to_all_node[n] = v
                 for nn in nodes[n].nexts.values():
                     heapq.heappush(q, (v + 1, nn.pos))
-
 
     def __lt__(ob1, ob2):
         if ob1.pos[0] == ob2.pos[0]:
@@ -96,7 +99,7 @@ class State(object):
 class Maze(object):
     def __init__(self, file_name):
         self.map = np.array([[self.conv_num(i) for i in l.rstrip()] for l in open(file_name, "r")])
-        if np.max(self.map) <= 20:
+        if np.max(self.map) < 20:
             self.b_enemy_num = np.max(self.map) - 9
             self.r_enemy_num = 0
         else:
@@ -117,7 +120,7 @@ class Maze(object):
         r_enemys = [None] * self.r_enemy_num
         for yi, xi in itertools.product(range(self.map.shape[0]), range(self.map.shape[1])):
             if self.map[yi, xi] > 0:
-                self.nodes[(yi, xi)] = Node(yi, xi)
+                self.nodes[(yi, xi)] = Node(yi, xi, self.map[yi, xi])
             if self.map[yi, xi] == 2:
                 human = (yi, xi)
             if self.map[yi, xi] == 3:
@@ -146,7 +149,7 @@ class Maze(object):
         if not done:
             self.move_enemys()
 
-    def move_only_a(self, h_action):
+    def move_only_h(self, h_action):
         self.move_human(h_action)
 
     def move_h(self, h_action):
@@ -163,6 +166,10 @@ class Maze(object):
         if self.state.human in self.state.r_enemys:
             self.state.done = self.state.r_enemys.index(self.state.human) + 10
             return True
+        if self.state.human == self.state.agent:
+            self.state.human = self.state.prev_human
+            # self.state.done = -1
+            # return True
         # if self.state.human == self.state.agent:
         #     self.state.human == self.state.prev_human
         return False
@@ -178,14 +185,18 @@ class Maze(object):
     def move_agent(self, a_action):
         self.state.prev_agent = self.state.agent
         next_agent = self.nodes[self.state.agent].nexts[a_action].pos
-        if (next_agent not in self.state.r_enemys and next_agent not in self.state.b_enemys) and\
+        if (next_agent not in self.state.r_enemys and next_agent not in self.state.b_enemys) and \
                 next_agent != self.state.human:
             self.state.agent = next_agent
+        if next_agent == self.state.human:
+            print(next_agent, self.state.human)
 
     def _escape(self, ei, pos):
         node = self.nodes[pos]
-        a_list = sorted([(self._min_dist(n, node, d, mid_n), a) for a, d, mid_n, n in node.to_next_t],
-                        reverse=True)
+        a_list = sorted(
+            [(self._min_dist(n, node, d, mid_n), a) for a, d, mid_n, n in node.to_next_t],
+            reverse=True)
+        # print(a_list)
         if a_list[0][0] < 1 and len(node.to_next_s) > 0:
             for a, _, _, _ in node.to_next_s:
                 return node.nexts[a].pos
@@ -193,7 +204,7 @@ class Maze(object):
             return pos
         for _, a in a_list:
             nn = node.nexts[a]
-            if not nn.pos in self.state.r_enemys and not nn.pos in self.state.b_enemys and\
+            if not nn.pos in self.state.r_enemys and not nn.pos in self.state.b_enemys and \
                     nn.pos != self.state.agent and nn.pos != self.state.human:
                 return nn.pos
         return pos
@@ -201,15 +212,11 @@ class Maze(object):
     def _min_dist(self, node, enemy_node, dist, mid_node):
         human, agent = self.nodes[self.state.human], self.nodes[self.state.agent]
         if self.state.human in mid_node:
+            # if self.state.agent not in mid_node or\
+            #         node.to_all_node[self.state.human] > node.to_all_node[self.state.agent]:
             if enemy_node.to_all_node[self.state.prev_human] < \
                     enemy_node.to_all_node[self.state.human]:
                 return 1000
-            # if self.state.prev_human in mid_node:
-            #     if self.nodes[self.state.prev_human].to_all_node[node.pos] >\
-            #             self.nodes[self.state.human].to_all_node[node.pos]:
-            # if self.state.prev_human in mid_node:
-            #     if human.to_all_node[node.pos] < self.nodes[self.state.prev_human].to_all_node[node.pos]:
-            #         return 1000
             return -1000 + enemy_node.to_all_node[self.state.human] - 0.1
         if self.state.agent in mid_node:
             if enemy_node.to_all_node[self.state.prev_agent] < \
@@ -224,12 +231,32 @@ class Maze(object):
             return -1000 + enemy_node.to_all_node[self.state.agent] - 0.1
         if human.to_all_node[node.pos] <= 1:
             return -1000 + dist - human.to_all_node[node.pos] - 0.1
+        human_dist = human.to_all_node[node.pos]
+        if node.to_all_node[self.state.human] > node.to_all_node[self.state.prev_human]:
+            human_dist += 500
+        agent_dist = agent.to_all_node[node.pos]
+        if node.to_all_node[self.state.agent] > node.to_all_node[self.state.prev_agent]:
+            agent_dist += 500
         return min(human.to_all_node[node.pos], agent.to_all_node[node.pos])
 
     def possible_action(self):
-        return [i for i in
-                itertools.product(self.nodes[self.state.human].nexts.keys(),
-                                  list(self.nodes[self.state.agent].nexts.keys()))]
+        h_actions = list(self.nodes[self.state.human].nexts.keys())
+        diff = (np.array(self.state.agent) - np.array(self.state.human))
+        diff_norm = np.sum(np.abs(diff))
+        # if diff_norm < 5:
+        #     self.show_world()
+        if diff_norm == 0:
+            return []
+        if diff_norm == 1:
+            # print(diff, self.state.agent, self.state.human, i_a_dir[tuple(diff)])
+            h_actions.remove(i_a_dir[tuple(diff)])
+        # if self.nodes[self.state.agent].to_all_node[self.state.human] == 1:
+        #     print(self.state.agent), print(self.state.human)
+
+        a_actions = list(self.nodes[self.state.agent].nexts.keys())
+        if self.nodes[self.state.agent].agent_forbid_down:
+            a_actions.remove(3)
+        return [i for i in itertools.product(h_actions, a_actions)]
 
     def show_world(self):
         for yi, xi in itertools.product(range(self.map.shape[0]), range(self.map.shape[1])):
