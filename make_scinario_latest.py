@@ -14,14 +14,16 @@ def make_belief():
 
 
 if __name__ == '__main__':
-    algo, target, main_th_r = 1, 0, 0
-    # algo, target, main_th_r = 2, 1, 0
-    map_index = 101
+    algo = 2
+    target = -1
+    # map_index, limit = 20, 25
+    map_index, limit, target = 102, 15, 0
     # map_index = 14
-    limit = 15
+    # limit = 17
     # limit = 1a
     use_dump = False
     save_dump = False
+    # maze = Maze(f"problem/p_e/map_data/map{map_index + algo}")
     maze = Maze(f"problem/p_e/map_data/map{map_index}")
     maze.show_world()
     # exit()
@@ -40,8 +42,12 @@ if __name__ == '__main__':
     # #     maze.show_world()
     # maze.show_world()
     # exit()
+    # if algo == 2:
+    #     env = MazeMDP(maze, limit, target)
+    #     env.make_single_policy()
+    #     target = int(np.argmax(np.max(env.single_q[:, 0, :, 0], axis=1)))
 
-    env = MazeMDP(maze, limit)
+    env = MazeMDP(maze, limit, target)
     # exit()
     s_limit = env.sd + 1
     # exit()
@@ -50,7 +56,8 @@ if __name__ == '__main__':
     irl = CoopIRL()
     irl.calc_h_belief(env, env.single_q, 0.1)
     print(env.single_q[:, :, :, 0])
-    # exit()
+    if algo == 2:
+        target = int(np.argmax(np.max(env.single_q[:, 0, :, 0], axis=1)))
 
     # env.a_vector_a, env.h_pi = pickle.load(open("policy.pkl", "rb"))
     # env.make_scinario(0, 1, algo)
@@ -62,10 +69,13 @@ if __name__ == '__main__':
     elif env.th_h == 2:
         b = make_belief()
 
-    irl.calc_a_vector(env, s_limit, b, algo, use_dump, save_dump)
+    irl.calc_a_vector(env, s_limit, b, algo, use_dump, save_dump, target)
     # env.make_scinario(f"pv_data/scinario_101.json", irl, limit, 5, -1)
-    env.make_scinario(f"pv_data/scinario_101.json", irl, limit, 5, -1)
-    # env.make_scinario(f"pv_data/scinario_{map_index}.json", irl, limit, 5, 0)
+    # env.make_scinario(f"pv_data/scinario_101.json", irl, limit, 5, -1)
+    if map_index >= 100:
+        env.make_scinario(f"pv_data/scinario_{map_index}.json", irl, limit, 5, target)
+    else:
+        env.make_scinario(f"pv_data/scinario_{map_index + algo}.json", irl, limit, algo + 1, target)
     # exit()
 
     # env.make_scinario(main_th_r, index, algo, target)
@@ -81,8 +91,8 @@ if __name__ == '__main__':
             # v = np.array([irl.value_a(0, th_r, a_r, b[i]) for i in range(len(b))])
             v = np.array(irl.value_a(0, th_r, a_r, s_belief))
             # v = np.array([irl.value(0, 1, b[i]) for i in range(len(b))])
-            if np.max(v) < -900:
-                continue
+            # if np.max(v) < -900:
+            #     continue
             # plt.plot(b[:, 0], v, label=a_r)
             # plt.plot([1.0], v, label=a_r)
             # plt.legend()

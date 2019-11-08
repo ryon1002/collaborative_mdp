@@ -8,7 +8,7 @@ import json
 a_dir = {0: np.array([-1, 0]), 1: np.array([0, -1]), 2: np.array([0, 1]), 3: np.array([1, 0])}
 
 class MazeMDP(CoopIRLMDP):
-    def __init__(self, maze, d=0):
+    def __init__(self, maze, d=0, target=-1):
         self.s_count = 0
         self.s_map = {}
         self.maze = maze
@@ -23,6 +23,7 @@ class MazeMDP(CoopIRLMDP):
         th_h = 2 if maze.r_enemy_num > 0 else 1
         super().__init__(len(self.s_map) + 1, 4, 4, maze.b_enemy_num, th_h)
         maze.state = self.init_state
+        self.target = target
 
     def get_a_list(self, maze, history):
         a_list = []
@@ -109,8 +110,7 @@ class MazeMDP(CoopIRLMDP):
                         self.r[a_r, a_h, s, :, :] = -l
                         if done != -1:
                             self.r[a_r, a_h, s, done % 10, done // 10] += 100
-                            if self.th_h == 2:
-                                self.r[a_r, a_h, s, :, (1 - (done // 10))] -= 20
+                            self.r[a_r, a_h, s, 1 - (done % 10), done // 10] -= 500
                         else:
                             self.r[a_r, a_h, s, :, :] -= (end_d * 2)
                 else:
