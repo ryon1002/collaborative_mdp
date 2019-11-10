@@ -14,17 +14,21 @@ def make_belief():
 
 
 if __name__ == '__main__':
-    algo = 2
+    algo = 3
     target = -1
     # map_index, limit = 20, 25
-    map_index, limit, target = 102, 15, 0
+    # map_index, limit = 30, 30
+    # map_index, limit = 40, 17
+    # map_index, limit = 50, 15
+    map_index, limit = 60, 25
+    # map_index, limit, target = 102, 15, 0
     # map_index = 14
     # limit = 17
     # limit = 1a
     use_dump = False
     save_dump = False
-    # maze = Maze(f"problem/p_e/map_data/map{map_index + algo}")
-    maze = Maze(f"problem/p_e/map_data/map{map_index}")
+    maze = Maze(f"problem/p_e/map_data/map{map_index + algo}")
+    # maze = Maze(f"problem/p_e/map_data/map{map_index}")
     maze.show_world()
     # exit()
 
@@ -54,8 +58,9 @@ if __name__ == '__main__':
     env.make_single_policy()
     print(env.s, s_limit)
     irl = CoopIRL()
-    irl.calc_h_belief(env, env.single_q, 0.1)
+    irl.calc_h_belief(env, env.single_q, 0.01)
     print(env.single_q[:, :, :, 0])
+    # exit()
     if algo == 2:
         target = int(np.argmax(np.max(env.single_q[:, 0, :, 0], axis=1)))
 
@@ -75,7 +80,7 @@ if __name__ == '__main__':
     if map_index >= 100:
         env.make_scinario(f"pv_data/scinario_{map_index}.json", irl, limit, 5, target)
     else:
-        env.make_scinario(f"pv_data/scinario_{map_index + algo}.json", irl, limit, algo + 1, target)
+        env.make_scinario(f"pv_data/scinario_{map_index + algo}.json", irl, limit, algo, target)
     # exit()
 
     # env.make_scinario(main_th_r, index, algo, target)

@@ -12,7 +12,8 @@ i_a_dir = {(-1, 0): 0, (0, -1): 1, (0, 1): 2, (1, 0): 3}
 class Node(object):
     def __init__(self, yi, xi, map_value):
         self.pos = (yi, xi)
-        self.agent_forbid_down = (map_value == 5)
+        self.agent_forbid_td = (map_value == 5)
+        self.agent_forbid_rl = (map_value == 6)
 
     def add_nexts(self, nodes):
         self.nexts = {}
@@ -254,8 +255,16 @@ class Maze(object):
         #     print(self.state.agent), print(self.state.human)
 
         a_actions = list(self.nodes[self.state.agent].nexts.keys())
-        if self.nodes[self.state.agent].agent_forbid_down:
-            a_actions.remove(3)
+        if self.nodes[self.state.agent].agent_forbid_td:
+            if 0 in a_actions:
+                a_actions.remove(0)
+            if 3 in a_actions:
+                a_actions.remove(3)
+        if self.nodes[self.state.agent].agent_forbid_rl:
+            if 1 in a_actions:
+                a_actions.remove(1)
+            if 2 in a_actions:
+                a_actions.remove(2)
         return [i for i in itertools.product(h_actions, a_actions)]
 
     def show_world(self):

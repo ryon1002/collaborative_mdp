@@ -110,7 +110,7 @@ class MazeMDP(CoopIRLMDP):
                         self.r[a_r, a_h, s, :, :] = -l
                         if done != -1:
                             self.r[a_r, a_h, s, done % 10, done // 10] += 100
-                            self.r[a_r, a_h, s, 1 - (done % 10), done // 10] -= 500
+                            # self.r[a_r, a_h, s, 1 - (done % 10), done // 10] -= 500
                         else:
                             self.r[a_r, a_h, s, :, :] -= (end_d * 2)
                 else:
@@ -178,6 +178,8 @@ class MazeMDP(CoopIRLMDP):
             v = np.array([[irl.value_a(ns, th_r, a_r, b) for a_r in range(self.a_r)]
                           for th_r in range(self.th_r)])
             n_a_r = np.argmax(np.max(v, axis=0))
+            if ns == 0:
+                n_a_r = 2
             if ns == 0:
                 in_a_list = [(a_h, -1), (None, n_a_r)]
             else:

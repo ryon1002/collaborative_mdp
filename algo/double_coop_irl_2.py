@@ -14,10 +14,6 @@ class CoopIRL(object):
     def calc_a_vector(self, env, d, bs=None, algo=1, use_dump=False, save_dump=False,
                       target = -1):
         if algo == 2:
-        #     self.a_vector_a = {
-        #         s: {th_r: {a_r: util.prune(vector, bs) for a_r, vector in vectorA.items()} for
-        #             th_r, vectorA in th_vector.items()} for s, th_vector in
-        #         a_vector.items()} if bs is not None else a_vector
             q = env.single_q[target, 0]
             self.a_vector_a = {}
             for s in range(env.s):
@@ -27,6 +23,7 @@ class CoopIRL(object):
                     for a_r in range(env.a_r):
                         self.a_vector_a[s][th_r][a_r] = np.zeros((1, env.th_h))
                         self.a_vector_a[s][th_r][a_r][:] = q[a_r, s]
+            return
             # self.a_vector = {
             #     s: {th_r: q for th_r, vector in th_vector.items()}
             #     for s, th_vector in a_vector.items()}
@@ -92,18 +89,18 @@ class CoopIRL(object):
         #     print(inv_r_pi[0])
         #     exit()
         # print(inv_r_pi.shape())
-        if algo == 0 or algo == 3:
+        if algo == 0:
             inv_r_pi = self.h_belief.copy()
         # print(inv_r_pi.shape)
         # exit()
         self.h_pi = {}
         for th_r in range(env.th_r):
-            if algo == 1 or algo == 2:
+            if algo == 1 or algo == 3:
                 inv_r_pi = np.zeros((env.th_h, env.s, env.th_r))
                 inv_r_pi[:, :, th_r] = 1
             self.h_pi[th_r] = {}
             for s in range(env.s):
-                # if algo == 2:
+                # if algo == 2 or algo == 3:
                 #     inv_r_pi[s] = np.zeros((env.a_r, env.th_r))
                 #     inv_r_pi[s][:, th_r] = 1
                 self.h_pi[th_r][s] = {}
@@ -146,6 +143,9 @@ class CoopIRL(object):
                     if algo == 3:
                         pi = np.apply_along_axis(prob_util._max_q_prob, 1, q_vector_2)
                         pi = np.apply_along_axis(prob_util._max_q_prob, 0, pi)
+                        # if s == 0:
+                        #     pi[:] = 0
+                        #     pi[2] = 1
                     else:
                         pi = np.apply_along_axis(prob_util._exp_q_prob, 0, q_vector_2, 0.1)
 
